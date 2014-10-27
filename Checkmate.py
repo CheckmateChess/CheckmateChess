@@ -108,3 +108,9 @@ class Checkmate:
 		@return: bool, whether operation is successful
 		
 		'''
+	
+	def currentplayer(self):
+		'''
+		Returns who will make the next move.
+		@return: string, Black|White
+		'''
