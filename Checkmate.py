@@ -23,6 +23,14 @@ class Checkmate:
         if book is not None and isfile(book):
             self.command.extend(['-a', book])
         self.process = Popen(self.command, stdin=PIPE, stdout=PIPE)
+        for i in range(5):
+            self.process.stdout.readline()
+        self.process.stdin.write('\n')
+        self.nextplayer = self.process.stdout.readline()[:5]
+        self.process.stdout.readline()
+        print self.nextplayer
+        self.process.stdout.readline()
+
 
     def nextmove(self, side, move):
         """
@@ -115,6 +123,9 @@ class Checkmate:
         """
         Sets up a new game.
         """
+        self.process.stdin.write('new\n')
+        for i in range(2):
+            print self.process.stdout.readline()
 
     def changemode(self, mode):
         """
