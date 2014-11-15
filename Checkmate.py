@@ -39,6 +39,10 @@ class Checkmate:
         @param move: string, [a-h][1-8] [a-h][1-8]
         @return: bool, True|False, whether move is valid.
         """
+        if self.nextplayer != side:
+            return False
+        self.process.stdin.write('%s\n'%move)
+
 
     def save(self, filename):
         """
@@ -46,6 +50,9 @@ class Checkmate:
         @param filename: absolute path of the file.
         @return: bool, True|False, whether it is saved successfully.
         """
+        self.process.stdin.write('pgnsave %s\n' % filename)
+        self.readgarbage(2)
+
 
     def load(self, filename):
         """
@@ -53,6 +60,12 @@ class Checkmate:
         @param filename: absolute path of the file.
         @return: bool, True|False, whether it is loaded successfully.
         """
+        self.process.stdin.write('pgnload %s\n' % filename)
+        self.readgarbage(4)
+        self.readboard()
+        self.readgarbage(1)
+        self.readnextplayer()
+
 
     def hint(self):
         """
@@ -93,6 +106,15 @@ class Checkmate:
         Returns all made move history.
         @return: dictionary of lists, lists contain moves
         """
+        history = {
+            'White': [],
+            'Black': [],
+        }
+        self.process.stdin.write('show game\n')
+        self.readgarbage(2)
+        self.sides =  [ i for i in self.process.stdout.readline().strip().split() if i != '' ]
+
+
 
     def quit(self):
         """
