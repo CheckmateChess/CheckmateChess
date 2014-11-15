@@ -15,7 +15,7 @@ class Checkmate:
         @param book: string|None, absolute path of the book file
         @return: Checkmate instance
         """
-        self.command = ['/usr/games/gnuchess']
+        self.command = ['/usr/games/gnuchess','-q']
         if mode == 'multi':
             self.command.append('-m')
         if difficulty == 'easy':
@@ -23,13 +23,13 @@ class Checkmate:
         if book is not None and isfile(book):
             self.command.extend(['-a', book])
         self.process = Popen(self.command, stdin=PIPE, stdout=PIPE)
-        for i in range(5):
-            self.process.stdout.readline()
-        self.process.stdin.write('\n')
-        self.nextplayer = self.process.stdout.readline()[:5]
-        self.process.stdout.readline()
-        print self.nextplayer
-        self.process.stdout.readline()
+        self.readgarbage(1)
+        self.readnextplayer()
+        self.mode = mode
+        self.process.stdin.write('show board\n')
+        self.readgarbage(4)
+        self.readboard()
+        self.readgarbage(1)
 
 
     def nextmove(self, side, move):
@@ -84,8 +84,9 @@ class Checkmate:
     def board(self):
         """
         Returns current game board.
-        @return: list of strings, each row is a string, list of rows 
+        @return: list of lists, each row is a list, list of rows
         """
+        return self.board
 
     def history(self):
         """
@@ -118,25 +119,66 @@ class Checkmate:
         @depth: int
         @return: bool, whether operation is successful
         """
+        self.process.stdin.write('depth %d\n' % depth)
+        self.readgarbage(3)
 
     def newgame(self):
         """
         Sets up a new game.
         """
         self.process.stdin.write('new\n')
-        for i in range(2):
-            print self.process.stdout.readline()
+        self.readgarbage(2)
+        self.readnextplayer()
 
     def changemode(self, mode):
         """
         Changes game mode.
         @param mode: string, single|manual
         @return: bool, whether operation is successful
-        
         """
+        if self.mode == mode:
+            return False
+        self.mode = mode
+        if mode == 'single':
+            self.process.stdin.write('manual\n')
+            self.readgarbage(2)
+            self.readnextplayer()
+        else:
+            self.process.stdin.write('go\n')
+            self.readgarbage(5)
+            self.readboard()
+            self.readgarbage(3)
+            self.readnextplayer()
+        return True
 
     def currentplayer(self):
         """
         Returns who will make the next move.
         @return: string, Black|White
         """
+        return self.nextplayer
+
+    def readgarbage(self,count):
+        """
+        reads garbage lines
+        """
+        for i in range(count):
+            self.process.stdout.readline()
+
+    def readnextplayer(self):
+        """
+        reads next player and stores in self.nextplayer
+        """
+        self.process.stdin.write('\n')
+        self.nextplayer = self.process.stdout.readline()[:5]
+        self.readgarbage(2)
+        print self.nextplayer
+
+    def readboard(self):
+        """
+        reads current board
+        """
+        self.board = []
+        for i in range(8):
+            self.board.append(self.process.stdout.readline().strip().split(' '))
+        print self.board
