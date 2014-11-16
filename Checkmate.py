@@ -42,6 +42,25 @@ class Checkmate:
         if self.nextplayer != side:
             return False
         self.process.stdin.write('%s\n' % move)
+        self.readgarbage(2)
+        if self.process.stdout.readline() == "Invalid move: %s\n" % move:
+            return False
+        self.readgarbage(2)
+        self.readboard()
+        self.readgarbage(1)
+        if self.mode == 'multi':
+            self.readnextplayer()
+        else:
+            self.readgarbage(3)
+            self.readboard()
+            self.readgarbage(3)
+            self.readnextplayer()
+        self.process.stdin.write('\n')
+        print '---------------'
+        print self.process.stdout.readline()
+        print '---------------'
+        return True
+
 
 
     def save(self, filename):
@@ -132,8 +151,16 @@ class Checkmate:
         }
         self.process.stdin.write('show game\n')
         self.readgarbage(2)
-        self.sides = [i for i in self.process.stdout.readline().strip().split() if i != '']
-        self.readgarbage(1)
+        if self.process.stdout.read(1) != ' ':
+            return history
+        sides = [i for i in self.process.stdout.readline().strip().split() if i != '']
+        while 1:
+            line = self.process.stdout.readline()
+            if line == '\n':
+                break
+            moves = [ i for i in line[6:].strip().split(' ') if i != '']
+            for i in range(2):
+                history[sides[i]].append(moves[i])
         return history
 
 
