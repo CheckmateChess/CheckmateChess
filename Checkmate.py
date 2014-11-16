@@ -15,7 +15,7 @@ class Checkmate:
         @param book: string|None, absolute path of the book file
         @return: Checkmate instance
         """
-        self.command = ['/usr/games/gnuchess','-q']
+        self.command = ['/usr/games/gnuchess', '-q']
         if mode == 'multi':
             self.command.append('-m')
         if difficulty == 'easy':
@@ -41,7 +41,7 @@ class Checkmate:
         """
         if self.nextplayer != side:
             return False
-        self.process.stdin.write('%s\n'%move)
+        self.process.stdin.write('%s\n' % move)
 
 
     def save(self, filename):
@@ -72,6 +72,12 @@ class Checkmate:
         Gives hint as a move.
         @return: string, [a-h][1-8] [a-h][1-8]
         """
+        self.process.stdin.write('hint\n')
+        self.readgarbage(2)
+        line = self.process.stdout.readline()
+        hint = line[line.find('Hint:') + 6: -1]
+        return hint
+
 
     def addbook(self, filename):
         """
@@ -79,6 +85,12 @@ class Checkmate:
         @param filename: string, absolute path of the file
         @return: bool, True|False, whether it is added successfully.
         """
+        if filename is None or not isfile(filename):
+            return False
+        self.process.stdin.write('book add %s\n' % filename)
+        while self.process.stdout.readline() != 'all done!\n':
+            pass
+        return True
 
     def enablebook(self, enable=True):
         """
@@ -86,6 +98,12 @@ class Checkmate:
         @param enable: bool, True|False
         @return: bool, True|False, whether operation is successful
         """
+        if enable:
+            self.process.stdin.write('book on\n')
+        else:
+            self.process.stdin.write('book off\n')
+        self.readgarbage(3)
+
 
     def bookmode(self, mode):
         """
@@ -93,6 +111,8 @@ class Checkmate:
         @param mode: string, worst|best|random
         @return: bool, True|False, whether operation is successful
         """
+        self.process.stdin.write('book %s\n' % mode)
+        self.readgarbage(3)
 
     def board(self):
         """
@@ -112,8 +132,9 @@ class Checkmate:
         }
         self.process.stdin.write('show game\n')
         self.readgarbage(2)
-        self.sides =  [ i for i in self.process.stdout.readline().strip().split() if i != '' ]
-
+        self.sides = [i for i in self.process.stdout.readline().strip().split() if i != '']
+        self.readgarbage(1)
+        return history
 
 
     def quit(self):
@@ -128,12 +149,23 @@ class Checkmate:
         Checks whether game is finished.
         @return: bool, True|False
         """
+        return self.isfinished
 
     def undo(self):
         """
         Backs up one move in game history.
         @return: bool, True|False, whether operation is successful
         """
+        success = True
+        self.process.stdin.write('undo\n')
+        self.readgarbage(2)
+        if self.process.stdout.readline() == 'No moves to undo!\n':
+            success = False
+        self.readgarbage(2)
+        self.readboard()
+        self.readgarbage(1)
+        return success
+
 
     def setdepth(self, depth=0):
         """
@@ -180,7 +212,7 @@ class Checkmate:
         """
         return self.nextplayer
 
-    def readgarbage(self,count):
+    def readgarbage(self, count):
         """
         reads garbage lines
         """
