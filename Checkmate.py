@@ -144,7 +144,7 @@ class Checkmate:
         self.readgarbage(3)
         return True
 
-    def board(self):
+    def getboard(self):
         """
         Returns current game board.
         @return: list of lists, each row is a list, list of rows

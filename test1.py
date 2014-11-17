@@ -1,7 +1,12 @@
 from Checkmate import Checkmate
+from Test import Test
 
 a = Checkmate(mode='multi')
 print a.nextmove('White', 'e4')
+
+dummy = Test()
+dummy.show(a)
+
 print a.nextmove('Black', 'a6')
 print a.nextmove('White', 'd1 f3')
 print a.nextmove('Black', 'a5')
