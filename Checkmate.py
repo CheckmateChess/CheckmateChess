@@ -22,6 +22,7 @@ class Checkmate:
         self.nextplayer = None
         self.board = None
         self.depth = None
+        self.bookmode = None
         self.command = ['/usr/games/gnuchess', '-q']
         if mode == 'multi':
             self.command.append('-m')
@@ -141,7 +142,7 @@ class Checkmate:
         self.readgarbage(3)
         return True
 
-    def bookmode(self, mode):
+    def setbookmode(self, mode):
         """
         Changes move preference from book.
         @param mode: string, worst|best|random
@@ -149,6 +150,7 @@ class Checkmate:
         """
         if mode not in ['worst', 'best', 'random']:
             return False
+        self.bookmode = mode
         self.process.stdin.write('book %s\n' % mode)
         self.readgarbage(3)
         return True
@@ -180,7 +182,8 @@ class Checkmate:
                 break
             moves = [i for i in line[6:].strip().split(' ') if i != '']
             for i in range(2):
-                history[sides[i]].append(moves[i])
+                if i < len(moves):
+                    history[sides[i]].append(moves[i])
         return history
 
     def quit(self):
@@ -205,14 +208,19 @@ class Checkmate:
         Backs up one move in game history.
         @return: bool, True|False, whether operation is successful
         """
+        if self.mode == 'single':
+            return False
         success = True
         self.process.stdin.write('undo\n')
         self.readgarbage(2)
         if self.process.stdout.readline() == 'No moves to undo!\n':
             success = False
-        self.readgarbage(2)
+            self.readgarbage(2)
+        else:
+            self.readgarbage(1)
         self.readboard()
         self.readgarbage(1)
+        self.readnextplayer()
         return success
 
     def setdepth(self, depth=0):
@@ -231,6 +239,12 @@ class Checkmate:
         """
         return self.depth
 
+    def getbookmode(self):
+        """
+        @return: returns bookmode
+        """
+        return self.bookmode
+
     def newgame(self):
         """
         Sets up a new game.
@@ -248,7 +262,7 @@ class Checkmate:
         if self.mode == mode:
             return False
         self.mode = mode
-        if mode == 'single':
+        if mode == 'multi':
             self.process.stdin.write('manual\n')
             self.readgarbage(2)
             self.readnextplayer()

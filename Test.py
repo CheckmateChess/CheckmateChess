@@ -5,6 +5,8 @@ class Test:
         print 'Winner      : ', checkmate.getwinner()
         print 'Next Player : ', checkmate.currentplayer()
         print 'Mode        : ', checkmate.getmode()
+        print 'Book mode   : ', checkmate.getbookmode()
+        print 'History     : ', checkmate.history()
         print 'Board       : '
         for row in checkmate.getboard():
             print '             ',
