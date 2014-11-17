@@ -7,6 +7,8 @@ from Test import Test
 bookmodes = ['worst', 'best', 'random']
 
 a = Checkmate(mode='multi')
+
+# Be sure to download and extract http://ftp.gnu.org/gnu/chess/book_1.00.pgn.gz
 a.addbook('book_1.00.pgn')
 a.enablebook(enable=True)
 
