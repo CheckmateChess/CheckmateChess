@@ -1,4 +1,3 @@
-# Scholar's mate
 from Checkmate import Checkmate
 from Test import Test
 

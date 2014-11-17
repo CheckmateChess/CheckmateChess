@@ -1,5 +1,6 @@
 from subprocess import Popen, PIPE
 from os.path import isfile
+from time import sleep
 
 
 class Checkmate:
@@ -20,6 +21,7 @@ class Checkmate:
         self.finished = False
         self.nextplayer = None
         self.board = None
+        self.depth = None
         self.command = ['/usr/games/gnuchess', '-q']
         if mode == 'multi':
             self.command.append('-m')
@@ -74,7 +76,7 @@ class Checkmate:
         @param filename: absolute path of the file.
         @return: bool, True|False, whether it is saved successfully.
         """
-        if filename is None or not isfile(filename):
+        if filename is None:
             return False
         self.process.stdin.write('pgnsave %s\n' % filename)
         self.readgarbage(2)
@@ -100,10 +102,17 @@ class Checkmate:
         Gives hint as a move.
         @return: string, [a-h][1-8] [a-h][1-8]
         """
+        hint = None
         self.process.stdin.write('hint\n')
         self.readgarbage(2)
+        sleep(0.5)
+        self.process.stdin.write('\n')
         line = self.process.stdout.readline()
-        hint = line[line.find('Hint:') + 6: -1]
+        if line.find('Hint:') != -1:
+            hint = line[line.find('Hint:') + 6: -1]
+            self.readgarbage(3)
+        else:
+            self.readgarbage(2)
         return hint
 
     def addbook(self, filename):
@@ -212,8 +221,15 @@ class Checkmate:
         @depth: int
         @return: bool, whether operation is successful
         """
+        self.depth = depth
         self.process.stdin.write('depth %d\n' % depth)
         self.readgarbage(3)
+
+    def getdepth(self):
+        """
+        @return: returns depth
+        """
+        return self.depth
 
     def newgame(self):
         """
