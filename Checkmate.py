@@ -26,6 +26,7 @@ class Checkmate:
         self.readgarbage(1)
         self.readnextplayer()
         self.mode = mode
+        self.winner = None
         self.process.stdin.write('show board\n')
         self.readgarbage(4)
         self.readboard()
@@ -56,9 +57,16 @@ class Checkmate:
             self.readgarbage(3)
             self.readnextplayer()
         self.process.stdin.write('\n')
-        print '---------------'
-        print self.process.stdout.readline()
-        print '---------------'
+        line = self.process.stdout.readline()
+        print '\n\n\n\n\n\n'
+        print line
+        if '{' in line:
+            self.readgarbage(3)
+            self.isfinished = True
+            self.winner = line[ line.find('{')+1: ][:5]
+            print '@'+self.winner+'@'
+        else:
+            self.readgarbage(2)
         return True
 
 
@@ -69,8 +77,11 @@ class Checkmate:
         @param filename: absolute path of the file.
         @return: bool, True|False, whether it is saved successfully.
         """
+        if filename is None or not isfile(filename):
+            return False
         self.process.stdin.write('pgnsave %s\n' % filename)
         self.readgarbage(2)
+        return True
 
 
     def load(self, filename):
@@ -79,12 +90,14 @@ class Checkmate:
         @param filename: absolute path of the file.
         @return: bool, True|False, whether it is loaded successfully.
         """
+        if filename is None or not isfile(filename):
+            return False
         self.process.stdin.write('pgnload %s\n' % filename)
         self.readgarbage(4)
         self.readboard()
         self.readgarbage(1)
         self.readnextplayer()
-
+        return True
 
     def hint(self):
         """
@@ -122,6 +135,7 @@ class Checkmate:
         else:
             self.process.stdin.write('book off\n')
         self.readgarbage(3)
+        return True
 
 
     def bookmode(self, mode):
@@ -130,8 +144,11 @@ class Checkmate:
         @param mode: string, worst|best|random
         @return: bool, True|False, whether operation is successful
         """
+        if mode not in ['worst','best','random']:
+            return False
         self.process.stdin.write('book %s\n' % mode)
         self.readgarbage(3)
+        return True
 
     def board(self):
         """
@@ -177,6 +194,9 @@ class Checkmate:
         @return: bool, True|False
         """
         return self.isfinished
+
+    def winner(self):
+        return self.winner
 
     def undo(self):
         """
@@ -253,7 +273,7 @@ class Checkmate:
         self.process.stdin.write('\n')
         self.nextplayer = self.process.stdout.readline()[:5]
         self.readgarbage(2)
-        print self.nextplayer
+        #print self.nextplayer
 
     def readboard(self):
         """
@@ -262,4 +282,4 @@ class Checkmate:
         self.board = []
         for i in range(8):
             self.board.append(self.process.stdout.readline().strip().split(' '))
-        print self.board
+        #print self.board
