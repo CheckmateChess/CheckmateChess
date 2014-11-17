@@ -15,6 +15,11 @@ class Checkmate:
         @param book: string|None, absolute path of the book file
         @return: Checkmate instance
         """
+        self.mode = mode
+        self.winner = None
+        self.finished = False
+        self.nextplayer = None
+        self.board = None
         self.command = ['/usr/games/gnuchess', '-q']
         if mode == 'multi':
             self.command.append('-m')
@@ -29,11 +34,6 @@ class Checkmate:
         self.readgarbage(4)
         self.readboard()
         self.readgarbage(1)
-        self.mode = mode
-        self.winner = None
-        self.isfinished = False
-        self.nextplayer = None
-        self.board = None
 
     def nextmove(self, side, move):
         """
@@ -62,7 +62,7 @@ class Checkmate:
         line = self.process.stdout.readline()
         if '{' in line:
             self.readgarbage(3)
-            self.isfinished = True
+            self.finished = True
             self.winner = line[line.find('{') + 1:][:5]
         else:
             self.readgarbage(2)
@@ -186,7 +186,7 @@ class Checkmate:
         Checks whether game is finished.
         @return: bool, True|False
         """
-        return self.isfinished
+        return self.finished
 
     def winner(self):
         return self.winner
