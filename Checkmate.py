@@ -188,7 +188,7 @@ class Checkmate:
         """
         return self.finished
 
-    def winner(self):
+    def getwinner(self):
         return self.winner
 
     def undo(self):
@@ -243,6 +243,12 @@ class Checkmate:
             self.readgarbage(3)
             self.readnextplayer()
         return True
+
+    def getmode(self):
+        """
+        @return: returns game mode
+        """
+        return self.mode
 
     def currentplayer(self):
         """

@@ -1,18 +1,15 @@
+#Scholar's mate
 from Checkmate import Checkmate
 from Test import Test
 
 a = Checkmate(mode='multi')
-print a.nextmove('White', 'e4')
+
+moves = [ ('White','e2 e4') ,('Black', 'a7 a6') ,('White', 'd1 f3') ,('Black', 'a6 a5') ,('White', 'f1 c4') ,('Black', 'a5 a4'),('White', 'f3 f7')]
 
 dummy = Test()
-dummy.show(a)
 
-print a.nextmove('Black', 'a6')
-print a.nextmove('White', 'd1 f3')
-print a.nextmove('Black', 'a5')
-print a.nextmove('White', 'f1 c4')
-print a.nextmove('Black', 'a4')
-print a.nextmove('White', 'f3 f7')
-print a.isfinished()
-print a.winner
+for move in moves:
+    a.nextmove(move[0],move[1])
+    dummy.show(a)
+
 a.quit()
