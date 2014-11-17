@@ -1,8 +1,5 @@
-from Checkmate import Checkmate
-
 class Test:
-
-    def show(self,checkmate):
+    def show(self, checkmate):
         print "#### SHOW ####"
         print 'Winner      : ', checkmate.getwinner()
         print 'Next Player : ', checkmate.currentplayer()

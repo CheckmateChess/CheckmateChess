@@ -1,4 +1,4 @@
-#Scholar's mate
+# Scholar's mate
 from Checkmate import Checkmate
 from Test import Test
 
@@ -16,7 +16,7 @@ while not a.isfinished():
     print '------------------------------------------------------'
 
     if move:
-        a.nextmove(a.currentplayer(),move)
+        a.nextmove(a.currentplayer(), move)
     else:
         break
     print '------------------------------------------------------ oynadim '
