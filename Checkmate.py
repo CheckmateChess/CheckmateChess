@@ -25,13 +25,15 @@ class Checkmate:
         self.process = Popen(self.command, stdin=PIPE, stdout=PIPE)
         self.readgarbage(1)
         self.readnextplayer()
-        self.mode = mode
-        self.winner = None
         self.process.stdin.write('show board\n')
         self.readgarbage(4)
         self.readboard()
         self.readgarbage(1)
-
+        self.mode = mode
+        self.winner = None
+        self.isfinished = False
+        self.nextplayer = None
+        self.board = None
 
     def nextmove(self, side, move):
         """
@@ -58,18 +60,13 @@ class Checkmate:
             self.readnextplayer()
         self.process.stdin.write('\n')
         line = self.process.stdout.readline()
-        print '\n\n\n\n\n\n'
-        print line
         if '{' in line:
             self.readgarbage(3)
             self.isfinished = True
-            self.winner = line[ line.find('{')+1: ][:5]
-            print '@'+self.winner+'@'
+            self.winner = line[line.find('{') + 1:][:5]
         else:
             self.readgarbage(2)
         return True
-
-
 
     def save(self, filename):
         """
@@ -82,7 +79,6 @@ class Checkmate:
         self.process.stdin.write('pgnsave %s\n' % filename)
         self.readgarbage(2)
         return True
-
 
     def load(self, filename):
         """
@@ -110,7 +106,6 @@ class Checkmate:
         hint = line[line.find('Hint:') + 6: -1]
         return hint
 
-
     def addbook(self, filename):
         """
         Compiles the given file.
@@ -137,14 +132,13 @@ class Checkmate:
         self.readgarbage(3)
         return True
 
-
     def bookmode(self, mode):
         """
         Changes move preference from book.
         @param mode: string, worst|best|random
         @return: bool, True|False, whether operation is successful
         """
-        if mode not in ['worst','best','random']:
+        if mode not in ['worst', 'best', 'random']:
             return False
         self.process.stdin.write('book %s\n' % mode)
         self.readgarbage(3)
@@ -175,11 +169,10 @@ class Checkmate:
             line = self.process.stdout.readline()
             if line == '\n':
                 break
-            moves = [ i for i in line[6:].strip().split(' ') if i != '']
+            moves = [i for i in line[6:].strip().split(' ') if i != '']
             for i in range(2):
                 history[sides[i]].append(moves[i])
         return history
-
 
     def quit(self):
         """
@@ -212,7 +205,6 @@ class Checkmate:
         self.readboard()
         self.readgarbage(1)
         return success
-
 
     def setdepth(self, depth=0):
         """
@@ -273,7 +265,6 @@ class Checkmate:
         self.process.stdin.write('\n')
         self.nextplayer = self.process.stdout.readline()[:5]
         self.readgarbage(2)
-        #print self.nextplayer
 
     def readboard(self):
         """
@@ -282,4 +273,3 @@ class Checkmate:
         self.board = []
         for i in range(8):
             self.board.append(self.process.stdout.readline().strip().split(' '))
-        #print self.board
