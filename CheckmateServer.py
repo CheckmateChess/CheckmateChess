@@ -1,11 +1,12 @@
 from threading import *
 from socket import *
 from Checkmate import *
-from pickle import *
+from json import *
 """
 
 start single hard /asd/qwe
-start multi None /asd/qwe GAMEID
+start multi None /asd/qwe
+connect GAMEID
 continue 5
 
 
@@ -26,50 +27,94 @@ setdepth depth
 GAMEID = 1
 
 class Game(Checkmate):
-	def __init__(self, mode="single", difficulty="hard", book=None):
-		Checkmate.__init__(self)
-		self.id = GAMEID
-		GAMEID += 1
+    def __init__(self, params):
+        Checkmate.__init__(self, params[0], params[1], params[2])
+        self.id = GAMEID
+        self.lock = Lock()
+        GAMEID += 1
+        self.active = 1
+
+        if params[0] == 'single' or (params[0] == 'multi' and params[3] == 'both'):
+            self.capacity = 1
+        else:
+            self.capacity = 2
+
 
 
 
 class Agent(Thread):
-	def __init__(self,conn,addr,checkmateserver):
-		Thread.__init__(self)
-		self.conn = conn
-		self.addr = addr
-		self.checkmateserver = checkmateserver
+    def __init__(self, conn,addr,checkmateserver):
+        Thread.__init__(self)
+        self.conn = conn
+        self.addr = addr
+        self.checkmateserver = checkmateserver
 
-	def run(self):
-		data = self.conn.recv(1024).strip().split()
-		if data[0] == 'start':
-			
-			self.game = Game( data[1] , data[2] , data[3] )
-		elif data[0] == 'continue':
-			self.game = load( open(str(data[1]+'.p'),'rb') )
-		self.checkmateserver.l.acquire()
-		self.checkmateserver.games.append(self.game)
-		self.checkmateserver.l.release()
-		while True:
-			data = self.conn.recv(1024).strip().split()
+    def run(self):
+        data = loads(self.conn.recv(1024).strip())
 
-			if data[0] == 'exit':
-				self.checkmateserver.l.acquire()
-				self.checkmateserver.games.remove( self.game )
-				self.checkmateserver.l.release()
-				
-				
+        if data['op'] == 'start':
+            self.game = Game(data['params'])
+
+            if data['params'][0] == 'multi':
+                self.side = data['params'][3]
+            self.conn.send('Game created with id: {}'.format(self.game.id))
+
+        elif data['op'] == 'connect':
+            self.checkmateserver.l.acquire()
+            game = self.checkmateserver.games[int(data['gameid'])]
+            self.checkmateserver.l.release()
+
+            if game.capacity - game.active > 0:
+                game.lock.acquire()
+                game.active += 1
+                if game.mode == 'multi':
+                    self.side = data['params'][0]
+                game.lock.release()
+                self.game = game
+
+        self.checkmateserver.l.acquire()
+        self.checkmateserver.games[self.game.id] = self.game
+        self.checkmateserver.l.release()
+
+
+
+        while True:
+            data = loads(self.conn.recv(1024).strip())
+
+            if data['op'] == 'exit':
+                self.game.lock.acquire()
+                self.game.active -= 1
+                self.game.lock.release()
+                self.conn.close()
+                return
+            elif data['op'] == 'kill':
+                self.checkmateserver.l.acquire()
+                game = self.checkmateserver.games[data['gameid']]
+                #TODO quit gonder
+                del self.checkmateserver.games[data['gameid']]
+                self.checkmateserver.l.release()
+                self.conn.close()
+                return
+            elif data['op'] == 'play':
+                function = data['params'][0]
+                params = data['params'][1:]
+                if function == 'nextmove':
+                    
+
+
+
+
 
 class CheckmateServer():
 
-	def __init__(self):
-		sock = socket(socket.AF_INET, socket.SOCK_STREAM)
-		sock.bind(('0.0.0.0',20000))
-		sock.listen(1)
-		self.games = []
-		self.l = Lock()
-		while True:
-			conn , addr =  sock.accept()
-			agent = Agent(conn,addr,self)
-			agent.start()
+    def __init__(self):
+        sock = socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(('0.0.0.0',20000))
+        sock.listen(1)
+        self.games = {}
+        self.l = Lock()
+        while True:
+            conn, addr = sock.accept()
+            agent = Agent(conn, addr, self)
+            agent.start()
 
