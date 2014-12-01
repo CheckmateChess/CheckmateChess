@@ -34,9 +34,9 @@ class Game(Checkmate):
         GAMEID += 1
         self.active = 1
 
-        if params[0] == 'single' or (params[0] == 'multi' and params[3] == 'both'):
+        if params[0] == 'single':
             self.capacity = 1
-        else:
+        elif params[0] == 'multi':
             self.capacity = 2
 
 
@@ -55,8 +55,6 @@ class Agent(Thread):
         if data['op'] == 'start':
             self.game = Game(data['params'])
 
-            if data['params'][0] == 'multi':
-                self.side = data['params'][3]
             self.conn.send('Game created with id: {}'.format(self.game.id))
 
         elif data['op'] == 'connect':
@@ -67,8 +65,6 @@ class Agent(Thread):
             if game.capacity - game.active > 0:
                 game.lock.acquire()
                 game.active += 1
-                if game.mode == 'multi':
-                    self.side = data['params'][0]
                 game.lock.release()
                 self.game = game
 
@@ -95,13 +91,29 @@ class Agent(Thread):
                 self.checkmateserver.l.release()
                 self.conn.close()
                 return
+
             elif data['op'] == 'play':
                 function = data['params'][0]
                 params = data['params'][1:]
+
                 if function == 'nextmove':
-                    
+                    self.game.lock.acquire()
+                    success = self.game.nextmove(data['params'][0],data['params'][1])
+                    board = self.game.getboard()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'board': board,'success' : success}))
 
+                elif function == 'save':
+                    self.game.lock.acquire()
+                    success = self.game.save(data['params'][0])
+                    self.game.lock.release()
+                    self.conn.send(dumps({'success': success}))
 
+                elif function == 'load':
+                    self.game.lock.acquire()
+                    success = self.game.save(data['params'][0])
+                    self.game.lock.release()
+                    self.conn.send(dumps({'success': success}))
 
 
 
