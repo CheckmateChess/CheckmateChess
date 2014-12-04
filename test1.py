@@ -1,16 +1,25 @@
-# Scholar's mate
 from Checkmate import Checkmate
+from socket import *
 from Test import Test
-
-a = Checkmate(mode='multi')
+from json import *
 
 moves = [('White', 'e2 e4'), ('Black', 'a7 a6'), ('White', 'd1 f3'), ('Black', 'a6 a5'), ('White', 'f1 c4'),
          ('Black', 'a5 a4'), ('White', 'f3 f7')]
 
-dummy = Test()
+test = Test()
 
-for move in moves:
-    a.nextmove(move[0], move[1])
-    dummy.show(a)
+s1 = socket(AF_INET, SOCK_STREAM)
+s1.connect(("0.0.0.0", 20000))
 
-a.quit()
+s2 = socket(AF_INET, SOCK_STREAM)
+s2.connect(("0.0.0.0", 20000))
+
+data = test.send(s1,'{"op":"start","params":["multi","None","None"]}')
+data = loads(data)
+gameid = data['gameid']
+
+test.send(s2,'{"op":"connect","gameid":"%d"}' % gameid)
+
+test.send(s1,'{"op":"play","params":["nextmove","%s","%s"]}' % moves[0] )
+
+

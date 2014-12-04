@@ -1,17 +1,12 @@
-class Test:
-    def show(self, checkmate):
-        print "#### SHOW ####"
-        print 'Finished    : ', checkmate.isfinished()
-        print 'Winner      : ', checkmate.getwinner()
-        print 'Next Player : ', checkmate.currentplayer()
-        print 'Mode        : ', checkmate.getmode()
-        print 'Book mode   : ', checkmate.getbookmode()
-        print 'History     : ', checkmate.history()
-        print 'Board       : '
-        for row in checkmate.getboard():
-            print '             ',
-            for frame in row:
-                print frame,
-            print
-        print "##############\n\n\n"
+from Checkmate import Checkmate
+from socket import *
 
+class Test:
+    def send(self,s,command):
+        s.send(command)
+        print "----------------------------------------"
+        print "Sent     :", command
+        data = s.recv(4096)
+        print "Received :", data
+        print "----------------------------------------"
+        return data

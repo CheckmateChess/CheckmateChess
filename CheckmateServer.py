@@ -2,6 +2,7 @@ from threading import *
 from socket import *
 from json import *
 import sys
+
 from Checkmate import *
 
 
@@ -37,7 +38,8 @@ class Game(Checkmate):
         self.id = GAMEID
         self.lock = Lock()
         GAMEID += 1
-        self.active = 1
+        self.activeplayers = 1
+        self.active = True
 
         if params[0] == 'multi':
             self.capacity = 2
@@ -53,7 +55,12 @@ class Agent(Thread):
         self.checkmateserver = checkmateserver
 
     def run(self):
-        data = loads(self.conn.recv(1024).strip())
+        rawdata = self.conn.recv(4096)
+        if not rawdata:
+            self.conn.shutdown(SHUT_RDWR)
+            self.conn.close()
+            return
+        data = loads(rawdata.strip())
 
         if data['op'] == 'start':
             self.game = Game(data['params'])
@@ -68,32 +75,63 @@ class Agent(Thread):
             game = self.checkmateserver.games[int(data['gameid'])]
             self.checkmateserver.l.release()
 
-            if game.capacity - game.active > 0:
+            if game.capacity - game.activeplayers > 0:
                 game.lock.acquire()
-                game.active += 1
+                game.activeplayers += 1
                 game.lock.release()
                 self.game = game
                 self.conn.send(dumps({'success': True}))
             else:
                 self.conn.send(dumps({'success': False}))
+                self.conn.shutdown(SHUT_RDWR)
                 self.conn.close()
                 return
 
         while True:
-            data = loads(self.conn.recv(1024).strip())
+
+            if not self.game.active:
+                self.game.lock.acquire()
+                self.game.quit()
+                self.game.lock.release()
+
+                self.checkmateserver.l.acquire()
+                del self.checkmateserver.games[self.game.id]
+                self.checkmateserver.l.release()
+                self.conn.send(dumps({'message': 'Game is killed'}))
+                self.conn.shutdown(SHUT_RDWR)
+                self.conn.close()
+                return
+
+            rawdata = self.conn.recv(4096)
+            if not rawdata:
+                self.game.lock.acquire()
+                self.game.activeplayers -= 1
+                self.game.lock.release()
+                self.conn.shutdown(SHUT_RDWR)
+                self.conn.close()
+                return
+            data = loads(rawdata.strip())
 
             if data['op'] == 'exit':
                 self.game.lock.acquire()
-                self.game.active -= 1
+                self.game.activeplayers -= 1
                 self.game.lock.release()
+                self.conn.send(dumps({'message': 'You are detached'}))
+                self.conn.shutdown(SHUT_RDWR)
                 self.conn.close()
                 return
             elif data['op'] == 'kill':
-                self.checkmateserver.l.acquire()
-                game = self.checkmateserver.games[data['gameid']]
-                # TODO quit gonder
-                del self.checkmateserver.games[data['gameid']]
-                self.checkmateserver.l.release()
+                self.game.lock.acquire()
+                self.game.active = False
+                if self.game.activeplayers == 1:
+                    self.checkmateserver.l.acquire()
+                    del self.checkmateserver.games[self.game.id]
+                    self.checkmateserver.l.release()
+                else:
+                    self.game.activeplayers -= 1
+                self.game.lock.release()
+                self.conn.send(dumps({'success': True}))
+                self.conn.shutdown(SHUT_RDWR)
                 self.conn.close()
                 return
 
@@ -158,9 +196,18 @@ class Agent(Thread):
 
                 elif function == 'quit':
                     self.game.lock.acquire()
-                    self.game.quit()
+                    self.game.active = False
+                    if self.game.activeplayers == 1:
+                        self.checkmateserver.l.acquire()
+                        del self.checkmateserver.games[self.game.id]
+                        self.checkmateserver.l.release()
+                    else:
+                        self.game.activeplayers -= 1
                     self.game.lock.release()
-                    # TODO cik
+                    self.conn.send(dumps({'success': True}))
+                    self.conn.shutdown(SHUT_RDWR)
+                    self.conn.close()
+                    return
 
                 elif function == 'isfinished':
                     self.game.lock.acquire()
@@ -202,30 +249,29 @@ class Agent(Thread):
                     self.game.newgame()
                     board = self.game.getboard()
                     self.game.lock.release()
-                    self.conn.send(dumps({'board':board}))
+                    self.conn.send(dumps({'board': board}))
 
                 elif function == 'changemode':
                     self.game.lock.acquire()
                     success = self.game.changemode(params[0])
                     self.game.lock.release()
-                    self.conn.send(dumps({'success':success}))
+                    self.conn.send(dumps({'success': success}))
 
                 elif function == 'getmode':
                     self.game.lock.acquire()
                     mode = self.game.getmode()
                     self.game.lock.release()
-                    self.conn.send(dumps({'success':success}))
+                    self.conn.send(dumps({'success': success}))
 
                 elif function == 'currentplayer':
                     self.game.lock.acquire()
                     currentplayer = self.game.currentplayer()
                     self.game.lock.release()
-                    self.conn.send(dumps({'currentplayer':currentplayer}))
-
+                    self.conn.send(dumps({'currentplayer': currentplayer}))
 
 
 class CheckmateServer():
-    def __init__(self,host,port):
+    def __init__(self, host, port):
         self.host = host
         self.port = port
         self.games = {}
@@ -242,5 +288,5 @@ class CheckmateServer():
 
 
 if __name__ == '__main__':
-    checkmateserver = CheckmateServer(sys.argv[1],int(sys.argv[2]))
+    checkmateserver = CheckmateServer(sys.argv[1], int(sys.argv[2]))
     checkmateserver.start()
