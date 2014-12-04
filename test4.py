@@ -1,19 +1,30 @@
 from Checkmate import Checkmate
+from socket import *
 from Test import Test
+from json import *
 
-dummy = Test()
+test = Test()
 
-a = Checkmate(mode='multi')
+s1 = socket(AF_INET, SOCK_STREAM)
+s1.connect(("0.0.0.0", 20000))
+s2 = socket(AF_INET, SOCK_STREAM)
+s2.connect(("0.0.0.0", 20000))
 
-a.nextmove('White', 'e2 e4')
-a.nextmove('Black', 'a7 a6')
+data = test.send(s1, '{"op":"start","params":["multi","None","None"]}')
 
-dummy.show(a)
+data = loads(data)
+gameid = data['gameid']
 
-a.undo()
+test.send(s2, '{"op":"connect","gameid":"%d"}' % gameid)
 
-a.nextmove('Black', 'a7 a5')
+test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % ('White', 'e2 e4'))
+test.send(s2, '{"op":"play","params":["nextmove","%s","%s"]}' % ('Black', 'a7 a6'))
 
-dummy.show(a)
+board = test.send(s1, '{"op":"getboard"}')
 
-a.quit()
+test.send(s2, '{"op":"undo"}')
+test.send(s2, '{"op":"play","params":["nextmove","%s","%s"]}' % ('Black', 'a7 a5'))
+
+board = test.send(s2, '{"op":"getboard"}')
+
+test.send(s2, '{"op":"quit"}')

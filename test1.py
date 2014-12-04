@@ -14,12 +14,17 @@ s1.connect(("0.0.0.0", 20000))
 s2 = socket(AF_INET, SOCK_STREAM)
 s2.connect(("0.0.0.0", 20000))
 
-data = test.send(s1,'{"op":"start","params":["multi","None","None"]}')
+data = test.send(s1, '{"op":"start","params":["multi","None","None"]}')
+
 data = loads(data)
 gameid = data['gameid']
 
-test.send(s2,'{"op":"connect","gameid":"%d"}' % gameid)
+test.send(s2, '{"op":"connect","gameid":"%d"}' % gameid)
 
-test.send(s1,'{"op":"play","params":["nextmove","%s","%s"]}' % moves[0] )
-
-
+test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[0])
+test.send(s2, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[1])
+test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[2])
+test.send(s2, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[3])
+test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[4])
+test.send(s2, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[5])
+test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[6])

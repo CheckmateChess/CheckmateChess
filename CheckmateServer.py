@@ -184,13 +184,13 @@ class Agent(Thread):
 
                 elif function == 'getboard':
                     self.game.lock.acquire()
-                    board = self.game.getboard(params[0])
+                    board = self.game.getboard() #parama gerek yok?
                     self.game.lock.release()
                     self.conn.send(dumps({'board': board}))
 
                 elif function == 'history':
                     self.game.lock.acquire()
-                    history = self.game.history(params[0])
+                    history = self.game.history()   #parama gerek yok?
                     self.game.lock.release()
                     self.conn.send(dumps({'history': history}))
 
