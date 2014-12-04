@@ -1,7 +1,10 @@
 from threading import *
 from socket import *
-from Checkmate import *
 from json import *
+
+from Checkmate import *
+
+
 """
 
 start single hard /asd/qwe
@@ -26,107 +29,146 @@ setdepth depth
 """
 GAMEID = 1
 
+
 class Game(Checkmate):
-	def __init__(self, params):
-		Checkmate.__init__(self, params[0], params[1], params[2])
-		global GAMEID
-		self.id = GAMEID
-		self.lock = Lock()
-		GAMEID += 1
-		self.active = 1
+    def __init__(self, params):
+        Checkmate.__init__(self, params[0], params[1], params[2])
+        global GAMEID
+        self.id = GAMEID
+        self.lock = Lock()
+        GAMEID += 1
+        self.active = 1
 
-		if params[0] == 'multi':
-			self.capacity = 2
-		else:
-			self.capacity = 1
-
+        if params[0] == 'multi':
+            self.capacity = 2
+        else:
+            self.capacity = 1
 
 
 class Agent(Thread):
-	def __init__(self, conn,addr,checkmateserver):
-		Thread.__init__(self)
-		self.conn = conn
-		self.addr = addr
-		self.checkmateserver = checkmateserver
+    def __init__(self, conn, addr, checkmateserver):
+        Thread.__init__(self)
+        self.conn = conn
+        self.addr = addr
+        self.checkmateserver = checkmateserver
 
-	def run(self):
-		data = loads(self.conn.recv(1024).strip())
+    def run(self):
+        data = loads(self.conn.recv(1024).strip())
 
-		if data['op'] == 'start':
-			self.game = Game(data['params'])
+        if data['op'] == 'start':
+            self.game = Game(data['params'])
 
-			self.conn.send(dumps({'gameid':self.game.id}))
+            self.conn.send(dumps({'gameid': self.game.id}))
 
-		elif data['op'] == 'connect':
-			self.checkmateserver.l.acquire()
-			game = self.checkmateserver.games[int(data['gameid'])]
-			self.checkmateserver.l.release()
+        elif data['op'] == 'connect':
+            self.checkmateserver.l.acquire()
+            game = self.checkmateserver.games[int(data['gameid'])]
+            self.checkmateserver.l.release()
 
-			if game.capacity - game.active > 0:
-				game.lock.acquire()
-				game.active += 1
-				game.lock.release()
-				self.game = game
+            if game.capacity - game.active > 0:
+                game.lock.acquire()
+                game.active += 1
+                game.lock.release()
+                self.game = game
 
-		self.checkmateserver.l.acquire()
-		self.checkmateserver.games[self.game.id] = self.game
-		self.checkmateserver.l.release()
+        self.checkmateserver.l.acquire()
+        self.checkmateserver.games[self.game.id] = self.game
+        self.checkmateserver.l.release()
 
+        while True:
+            data = loads(self.conn.recv(1024).strip())
 
+            if data['op'] == 'exit':
+                self.game.lock.acquire()
+                self.game.active -= 1
+                self.game.lock.release()
+                self.conn.close()
+                return
+            elif data['op'] == 'kill':
+                self.checkmateserver.l.acquire()
+                game = self.checkmateserver.games[data['gameid']]
+                # TODO quit gonder
+                del self.checkmateserver.games[data['gameid']]
+                self.checkmateserver.l.release()
+                self.conn.close()
+                return
 
-		while True:
-			data = loads(self.conn.recv(1024).strip())
+            elif data['op'] == 'play':
+                function = data['params'][0]
+                params = data['params'][1:]
 
-			if data['op'] == 'exit':
-				self.game.lock.acquire()
-				self.game.active -= 1
-				self.game.lock.release()
-				self.conn.close()
-				return
-			elif data['op'] == 'kill':
-				self.checkmateserver.l.acquire()
-				game = self.checkmateserver.games[data['gameid']]
-				#TODO quit gonder
-				del self.checkmateserver.games[data['gameid']]
-				self.checkmateserver.l.release()
-				self.conn.close()
-				return
+                if function == 'nextmove':
+                    self.game.lock.acquire()
+                    success = self.game.nextmove(params[0], params[1])
+                    board = self.game.getboard()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'board': board, 'success': success}))
 
-			elif data['op'] == 'play':
-				function = data['params'][0]
-				params = data['params'][1:]
+                elif function == 'save':
+                    self.game.lock.acquire()
+                    success = self.game.save(params[0])
+                    self.game.lock.release()
+                    self.conn.send(dumps({'success': success}))
 
-				if function == 'nextmove':
-					self.game.lock.acquire()
-					success = self.game.nextmove(params[0],params[1])
-					board = self.game.getboard()
-					self.game.lock.release()
-					self.conn.send(dumps({'board': board,'success' : success}))
+                elif function == 'load':
+                    self.game.lock.acquire()
+                    success = self.game.save(params[0])
+                    self.game.lock.release()
+                    self.conn.send(dumps({'success': success}))
 
-				elif function == 'save':
-					self.game.lock.acquire()
-					success = self.game.save(params[0])
-					self.game.lock.release()
-					self.conn.send(dumps({'success': success}))
+                elif function == 'hint':
+                    self.game.lock.acquire()
+                    hint = self.game.hint()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'hint': hint}))
 
-				elif function == 'load':
-					self.game.lock.acquire()
-					success = self.game.save(params[0])
-					self.game.lock.release()
-					self.conn.send(dumps({'success': success}))
+                elif function == 'addbook':
+                    self.game.lock.acquire()
+                    success = self.game.addbook(params[0])
+                    self.game.lock.release()
+                    self.conn.send(dumps({'success': success}))
+
+                elif function == 'enablebook':
+                    self.game.lock.acquire()
+                    success = self.game.enablebook(params[0])
+                    self.game.lock.release()
+                    self.conn.send(dumps({'success': success}))
+
+                elif function == 'setbookmode':
+                    self.game.lock.acquire()
+                    success = self.game.setbookmode(params[0])
+                    self.game.lock.release()
+                    self.conn.send(dumps({'success': success}))
+
+                elif function == 'getboard':
+                    self.game.lock.acquire()
+                    board = self.game.getboard(params[0])
+                    self.game.lock.release()
+                    self.conn.send(dumps({'board': board}))
+
+                elif function == 'history':
+                    self.game.lock.acquire()
+                    history = self.game.history(params[0])
+                    self.game.lock.release()
+                    self.conn.send(dumps({'history': history}))
+
+                elif function == 'exit':
+                    self.game.lock.acquire()
+                    self.game.quit()
+                    self.game.lock.release()
+                    # TODO cik
 
 
 
 class CheckmateServer():
-
-	def __init__(self):
-		sock = socket(AF_INET,SOCK_STREAM)
-		sock.bind(('0.0.0.0',20000))
-		sock.listen(1)
-		self.games = {}
-		self.l = Lock()
-		while True:
-			conn, addr = sock.accept()
-			agent = Agent(conn, addr, self)
-			agent.start()
+    def __init__(self):
+        sock = socket(AF_INET, SOCK_STREAM)
+        sock.bind(('0.0.0.0', 20000))
+        sock.listen(1)
+        self.games = {}
+        self.l = Lock()
+        while True:
+            conn, addr = sock.accept()
+            agent = Agent(conn, addr, self)
+            agent.start()
 
