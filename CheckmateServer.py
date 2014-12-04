@@ -1,7 +1,7 @@
 from threading import *
 from socket import *
 from json import *
-
+import sys
 from Checkmate import *
 
 
@@ -57,8 +57,11 @@ class Agent(Thread):
 
         if data['op'] == 'start':
             self.game = Game(data['params'])
-
             self.conn.send(dumps({'gameid': self.game.id}))
+
+            self.checkmateserver.l.acquire()
+            self.checkmateserver.games[self.game.id] = self.game
+            self.checkmateserver.l.release()
 
         elif data['op'] == 'connect':
             self.checkmateserver.l.acquire()
@@ -70,10 +73,11 @@ class Agent(Thread):
                 game.active += 1
                 game.lock.release()
                 self.game = game
-
-        self.checkmateserver.l.acquire()
-        self.checkmateserver.games[self.game.id] = self.game
-        self.checkmateserver.l.release()
+                self.conn.send(dumps({'success': True}))
+            else:
+                self.conn.send(dumps({'success': False}))
+                self.conn.close()
+                return
 
         while True:
             data = loads(self.conn.recv(1024).strip())
@@ -152,23 +156,91 @@ class Agent(Thread):
                     self.game.lock.release()
                     self.conn.send(dumps({'history': history}))
 
-                elif function == 'exit':
+                elif function == 'quit':
                     self.game.lock.acquire()
                     self.game.quit()
                     self.game.lock.release()
                     # TODO cik
 
+                elif function == 'isfinished':
+                    self.game.lock.acquire()
+                    isfinished = self.game.isfinished()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'isfinished': isfinished}))
+
+                elif function == 'getwinner':
+                    self.game.lock.acquire()
+                    winner = self.game.getwinner()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'winner': winner}))
+
+                elif function == 'undo':
+                    self.game.lock.acquire()
+                    success = self.game.undo()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'success': success}))
+
+                elif function == 'setdepth':
+                    self.game.lock.acquire()
+                    self.game.setdepth(int(params[0]))
+                    self.game.lock.release()
+
+                elif function == 'getdepth':
+                    self.game.lock.acquire()
+                    depth = self.game.getdepth()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'depth': depth}))
+
+                elif function == 'getbookmode':
+                    self.game.lock.acquire()
+                    bookmode = self.game.getbookmode()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'bookmode': bookmode}))
+
+                elif function == 'newgame':
+                    self.game.lock.acquire()
+                    self.game.newgame()
+                    board = self.game.getboard()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'board':board}))
+
+                elif function == 'changemode':
+                    self.game.lock.acquire()
+                    success = self.game.changemode(params[0])
+                    self.game.lock.release()
+                    self.conn.send(dumps({'success':success}))
+
+                elif function == 'getmode':
+                    self.game.lock.acquire()
+                    mode = self.game.getmode()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'success':success}))
+
+                elif function == 'currentplayer':
+                    self.game.lock.acquire()
+                    currentplayer = self.game.currentplayer()
+                    self.game.lock.release()
+                    self.conn.send(dumps({'currentplayer':currentplayer}))
+
 
 
 class CheckmateServer():
-    def __init__(self):
-        sock = socket(AF_INET, SOCK_STREAM)
-        sock.bind(('0.0.0.0', 20000))
-        sock.listen(1)
+    def __init__(self,host,port):
+        self.host = host
+        self.port = port
         self.games = {}
         self.l = Lock()
+
+    def start(self):
+        self.sock = socket(AF_INET, SOCK_STREAM)
+        self.sock.bind((self.host, self.port))
+        self.sock.listen(1)
         while True:
-            conn, addr = sock.accept()
+            conn, addr = self.sock.accept()
             agent = Agent(conn, addr, self)
             agent.start()
 
+
+if __name__ == '__main__':
+    checkmateserver = CheckmateServer(sys.argv[1],int(sys.argv[2]))
+    checkmateserver.start()

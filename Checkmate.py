@@ -227,7 +227,6 @@ class Checkmate:
         """
         Sets the program to look depth moves deep for every search it performs.
         @depth: int
-        @return: bool, whether operation is successful
         """
         self.depth = depth
         self.process.stdin.write('depth %d\n' % depth)
