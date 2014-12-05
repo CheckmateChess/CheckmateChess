@@ -37,9 +37,11 @@ class Game(Checkmate):
         global GAMEID
         self.id = GAMEID
         self.lock = Lock()
+        self.cv = Condition(self.lock)
         GAMEID += 1
         self.activeplayers = 1
         self.active = True
+        self.nextcolor = 'White'
 
         if params[0] == 'multi':
             self.capacity = 2
@@ -53,6 +55,8 @@ class Agent(Thread):
         self.conn = conn
         self.addr = addr
         self.checkmateserver = checkmateserver
+        self.game = None
+        self.color = None
 
     def run(self):
         rawdata = self.conn.recv(4096)
@@ -64,30 +68,57 @@ class Agent(Thread):
 
         if data['op'] == 'start':
             self.game = Game(data['params'])
-            self.conn.send(dumps({'gameid': self.game.id}))
-
             self.checkmateserver.l.acquire()
             self.checkmateserver.games[self.game.id] = self.game
             self.checkmateserver.l.release()
+            if self.game.mode == 'multi':
+                self.color = data['color']
+            self.conn.send(dumps({'gameid': self.game.id}))
 
         elif data['op'] == 'connect':
             self.checkmateserver.l.acquire()
             game = self.checkmateserver.games[int(data['gameid'])]
             self.checkmateserver.l.release()
-
+            if game.mode == 'multi':
+                self.color = data['color']
             if game.capacity - game.activeplayers > 0:
                 game.lock.acquire()
                 game.activeplayers += 1
                 game.lock.release()
                 self.game = game
                 self.conn.send(dumps({'success': True}))
+                self.game.cv.acquire()
+                self.game.cv.notifyAll()
+                self.game.cv.release()
             else:
                 self.conn.send(dumps({'success': False}))
                 self.conn.shutdown(SHUT_RDWR)
                 self.conn.close()
                 return
+        else:
+            self.conn.send(dumps({'message': 'Wrong format'}))
+            self.conn.shutdown(SHUT_RDWR)
+            self.conn.close()
+            return
 
         while True:
+            print self.color,'1'
+            if self.game.mode == 'multi':
+                print self.color,'2'
+                self.game.cv.acquire()
+                print self.color,'3'
+                if self.game.activeplayers < 2:
+                    print self.color,'4'
+                    while self.game.activeplayers < 2:
+                        self.game.cv.wait()
+                    print self.color,'5'
+                else:
+                    print self.color,'6'
+                    while self.game.nextcolor != self.color:
+                        self.game.cv.wait()
+                    print self.color,'7'
+                self.game.cv.release()
+            print self.color,'8'
 
             if not self.game.active:
                 self.game.lock.acquire()
@@ -100,6 +131,9 @@ class Agent(Thread):
                 self.conn.send(dumps({'message': 'Game is killed'}))
                 self.conn.shutdown(SHUT_RDWR)
                 self.conn.close()
+                self.game.cv.acquire()
+                self.game.cv.notifyAll()
+                self.game.cv.release()
                 return
 
             rawdata = self.conn.recv(4096)
@@ -143,8 +177,17 @@ class Agent(Thread):
                     self.game.lock.acquire()
                     success = self.game.nextmove(params[0], params[1])
                     board = self.game.getboard()
+                    isfinished = self.game.isfinished()
                     self.game.lock.release()
-                    self.conn.send(dumps({'board': board, 'success': success}))
+                    if success:
+                        self.game.nextcolor = 'White' if self.game.nextcolor == 'Black' else 'Black'
+                        self.game.cv.acquire()
+                        self.game.cv.notifyAll()
+                        self.game.cv.release()
+                    if isfinished:
+                        self.conn.send(dumps({'board': board, 'success': success, 'isfinished': isfinished}))
+                    else:
+                        self.conn.send(dumps({'board': board, 'success': success}))
 
                 elif function == 'save':
                     self.game.lock.acquire()
@@ -184,13 +227,13 @@ class Agent(Thread):
 
                 elif function == 'getboard':
                     self.game.lock.acquire()
-                    board = self.game.getboard() #parama gerek yok?
+                    board = self.game.getboard()
                     self.game.lock.release()
                     self.conn.send(dumps({'board': board}))
 
                 elif function == 'history':
                     self.game.lock.acquire()
-                    history = self.game.history()   #parama gerek yok?
+                    history = self.game.history()
                     self.game.lock.release()
                     self.conn.send(dumps({'history': history}))
 
@@ -207,6 +250,9 @@ class Agent(Thread):
                     self.conn.send(dumps({'success': True}))
                     self.conn.shutdown(SHUT_RDWR)
                     self.conn.close()
+                    self.game.cv.acquire()
+                    self.game.cv.notifyAll()
+                    self.game.cv.release()
                     return
 
                 elif function == 'isfinished':
@@ -261,7 +307,7 @@ class Agent(Thread):
                     self.game.lock.acquire()
                     mode = self.game.getmode()
                     self.game.lock.release()
-                    self.conn.send(dumps({'success': success}))
+                    self.conn.send(dumps({'mode': mode}))
 
                 elif function == 'currentplayer':
                     self.game.lock.acquire()
@@ -276,6 +322,7 @@ class CheckmateServer():
         self.port = port
         self.games = {}
         self.l = Lock()
+        self.sock = None
 
     def start(self):
         self.sock = socket(AF_INET, SOCK_STREAM)
