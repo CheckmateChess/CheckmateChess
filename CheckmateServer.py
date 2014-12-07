@@ -7,17 +7,26 @@ from Checkmate import *
 
 
 """
-    PROTOKOL
+    PROTOCOL
 --------------
  - JSON Objects
- - Dict of p commands
- - Primary commands:
-   * op
-   * color
-   *
-   * kill
-   * exit
-   *
+ - Dict of following fields
+    * op : String, one of the followings:
+     = start : starts new game according to params
+     = connect : connects game with given gameid
+     = exit : detaches from game
+     = kill : kills game
+     = play : plays the command at params[0] according to rest of params
+    * color : White or Black, assigned to agent
+    * gameid : int
+    * params : list of command and parameters will be given to command
+
+Sample examples:
+ - {"op":"start" , "color":"White","params":["multi","None","None"]}
+ - {"op":"connect" , "color":"Black","gameid":"1"}
+ - {"op":"play","params":["nextmove","White","e2 e4"]}
+ - {"op":"kill"}
+ - {"op":"play","params":["setbookmode","random"]}
 
 """
 GAMEID = 1
@@ -42,7 +51,16 @@ class Game(Checkmate):
 
 
 class Agent(Thread):
+    '''
+    Handles each clients requests by receiving and sending JSON objects.
+    '''
     def __init__(self, conn, addr, checkmateserver):
+        '''
+        Take information needed to handle jobs.
+        @conn : socket object, connection to client
+        @addr : string, client's address
+        @checkmateserver : CheckmateServer object
+        '''
         Thread.__init__(self)
         self.conn = conn
         self.addr = addr
@@ -51,6 +69,9 @@ class Agent(Thread):
         self.color = 'White'
 
     def run(self):
+        '''
+        receives commands as JSON objects, does the job and sends feedbacks to clients
+        '''
         rawdata = self.conn.recv(4096)
 
         if not rawdata:
@@ -327,7 +348,15 @@ class Agent(Thread):
 
 
 class CheckmateServer():
+    '''
+    CheckmateServer is a server for Checkmate application.
+    '''
     def __init__(self, host, port):
+        '''
+        binds given host and port
+        @host : string
+        @param : int
+        '''
         self.host = host
         self.port = port
         self.games = {}
@@ -336,6 +365,9 @@ class CheckmateServer():
         self.agents = []
 
     def start(self):
+        '''
+        listens and starts a new agent for each connection.
+        '''
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.bind((self.host, self.port))
         self.sock.listen(1)

@@ -45,4 +45,3 @@ test.send(s2, '{"op":"play","params":["history"]}')
 
 test.send(s2, '{"op":"kill"}')
 test.send(s1, '{"op":"kill"}')
-
