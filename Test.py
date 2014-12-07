@@ -1,9 +1,8 @@
-from Checkmate import Checkmate
-from socket import *
 from json import *
 
+
 class Test:
-    def send(self,s,command):
+    def send(self, s, command):
         s.send(command)
         print "----------------------------------------"
         print "Sent     :", command

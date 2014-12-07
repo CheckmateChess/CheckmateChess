@@ -1,7 +1,7 @@
-from Checkmate import Checkmate
 from socket import *
+
 from Test import Test
-from json import *
+
 
 test = Test()
 

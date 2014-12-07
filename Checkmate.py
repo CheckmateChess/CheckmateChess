@@ -292,7 +292,7 @@ class Checkmate:
         reads garbage lines
         """
         for i in range(count):
-            print "garbage-----", self.process.stdout.readline()
+            self.process.stdout.readline()
 
     def readnextplayer(self):
         """
@@ -304,7 +304,6 @@ class Checkmate:
         if '{' in line:
             self.finished = True
             self.winner = line[line.find('{') + 1:][:5]
-        print "read next -----", line
         self.readgarbage(2)
 
     def readboard(self):

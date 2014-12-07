@@ -1,9 +1,8 @@
 from random import randint
-
-from Checkmate import Checkmate
-from Test import Test
 from socket import *
 from json import *
+
+from Test import Test
 
 bookmodes = ['worst', 'best', 'random']
 
@@ -37,14 +36,18 @@ while True:
         if move['hint']:
             test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % ("White", move['hint']))
         else:
-            break
-
+            test.send(s1, '{"op":"kill"}')
+            test.send(s2, '{"op":"kill"}')
+            exit(1)
 
         data2 = test.send(s2, '{"op":"play","params":["isfinished"]}')
         data2 = loads(data2)
 
         if data2['isfinished']:
-            break
+            test.send(s2, '{"op":"kill"}')
+            test.send(s1, '{"op":"kill"}')
+
+            exit()
     else:
         test.send(s2, '{"op":"play","params":["setbookmode","%s"]}' % bookmodes[randint(0, 2)])
         move = test.send(s2, '{"op":"play","params":["hint"]}')
@@ -52,13 +55,18 @@ while True:
         if move['hint']:
             test.send(s2, '{"op":"play","params":["nextmove","%s","%s"]}' % ("Black", move['hint']))
         else:
-            break
+            test.send(s2, '{"op":"kill"}')
+            test.send(s1, '{"op":"kill"}')
+
+            exit()
 
         data1 = test.send(s1, '{"op":"play","params":["isfinished"]}')
         data1 = loads(data1)
 
         if data1['isfinished']:
-            break
+            test.send(s1, '{"op":"kill"}')
+            test.send(s2, '{"op":"kill"}')
+
+            exit()
 
     count += 1
-

@@ -1,7 +1,8 @@
-from Checkmate import Checkmate
 from socket import *
-from Test import Test
 from json import *
+
+from Test import Test
+
 
 moves = [('White', 'e2 e4'), ('Black', 'a7 a6'), ('White', 'd1 f3'), ('Black', 'a6 a5'), ('White', 'f1 c4'),
          ('Black', 'a5 a4'), ('White', 'f3 f7')]
@@ -29,7 +30,5 @@ test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[4])
 test.send(s2, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[5])
 test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[6])
 
-s1.shutdown(SHUT_RDWR)
-s1.close()
-s2.shutdown(SHUT_RDWR)
-s2.close()
+test.send(s2, '{"op":"kill"}')
+test.send(s1, '{"op":"kill"}')

@@ -7,25 +7,17 @@ from Checkmate import *
 
 
 """
-
-start single hard /asd/qwe
-start multi None /asd/qwe
-connect GAMEID
-continue 5
-
-
-save
-exit
-
-CM init single hard /asd/qwe GAMEID
-CM init multi None None GAMEID
-
-
-
-example:
-load filename
-history
-setdepth depth
+    PROTOKOL
+--------------
+ - JSON Objects
+ - Dict of p commands
+ - Primary commands:
+   * op
+   * color
+   *
+   * kill
+   * exit
+   *
 
 """
 GAMEID = 1
@@ -60,22 +52,12 @@ class Agent(Thread):
 
     def run(self):
         rawdata = self.conn.recv(4096)
-        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',rawdata
-        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',rawdata
-        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',rawdata
-        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',rawdata
 
         if not rawdata:
             self.conn.shutdown(SHUT_RDWR)
             self.conn.close()
             return
         data = loads(rawdata.strip())
-
-        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',data
-        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',data
-        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',data
-        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',data
-
 
         if data['op'] == 'start':
             self.game = Game(data['params'])
@@ -90,19 +72,9 @@ class Agent(Thread):
             self.conn.send(dumps({'gameid': self.game.id}))
 
         elif data['op'] == 'connect':
-            print '-------------------------------------------------------------------------'
-            print '-------------------------------------------------------------------------'
-            print '-------------------------------------------------------------------------'
-            print '-------------------------------------------------------------------------'
-
             self.checkmateserver.l.acquire()
             game = self.checkmateserver.games[int(data['gameid'])]
             self.checkmateserver.l.release()
-            print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-            print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-            print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-            print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-
             if game.capacity - game.activeplayers > 0:
                 game.cv.acquire()
                 game.activeplayers += 1
@@ -111,7 +83,6 @@ class Agent(Thread):
                 game.cv.release()
                 if gamemode == 'multi':
                     self.color = data['color']
-                print "--------------------------------",self.color, dumps({'success': True})
                 self.conn.send(dumps({'success': True}))
                 self.game.cv.acquire()
                 self.game.cv.notifyAll()
@@ -128,27 +99,18 @@ class Agent(Thread):
             return
 
         while True:
-            print self.color,'1'
+
             self.game.cv.acquire()
             if self.game.mode == 'multi':
-                print self.color,'2'
-
-                print self.color,'3'
                 if self.game.activeplayers < 2:
-                    print self.color,'4'
-                    while self.game.activeplayers < 2:
+                    while self.game.active and self.game.activeplayers < 2:
                         self.game.cv.wait()
-                    print self.color,'5'
                 else:
-                    print self.color,'6'
-                    while self.game.nextcolor != self.color:
+                    while self.game.active and self.game.nextcolor != self.color:
                         self.game.cv.wait()
-                    print self.color,'7'
             self.game.cv.release()
-            print self.color,'8'
-            print self.color,"asd"
+
             self.game.cv.acquire()
-            print self.color,"qwe"
             gameactive = self.game.active
             self.game.cv.release()
             if not gameactive:
@@ -248,7 +210,7 @@ class Agent(Thread):
                     self.conn.send(dumps({'hint': hint}))
 
                 elif function == 'addbook':
-                    print 'aq'
+
                     self.game.lock.acquire()
                     success = self.game.addbook(params[0])
                     self.game.lock.release()
@@ -389,5 +351,5 @@ if __name__ == '__main__':
     try:
         checkmateserver.start()
     except KeyboardInterrupt:
-
+        checkmateserver.sock.close()
         print 'Server Shutdown'
