@@ -12,8 +12,6 @@ s1.connect(("0.0.0.0", 20000))
 
 test.send(s1, '{"op":"start" , "color":"White","params":["multi","None","None"]}')
 
-
-
 test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[0])
 
 test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[1])
@@ -21,3 +19,6 @@ test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[1])
 test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[2])
 
 test.send(s1, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[3])
+
+s1.shutdown(SHUT_RDWR)
+s1.close()

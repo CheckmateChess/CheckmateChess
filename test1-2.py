@@ -20,3 +20,7 @@ test.send(s2, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[0])
 test.send(s2, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[1])
 
 test.send(s2, '{"op":"play","params":["nextmove","%s","%s"]}' % moves[2])
+
+
+s2.shutdown(SHUT_RDWR)
+s2.close()

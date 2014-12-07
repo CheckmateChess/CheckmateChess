@@ -63,6 +63,7 @@ class Checkmate:
             self.readnextplayer()
         self.process.stdin.write('\n')
         line = self.process.stdout.readline()
+
         if '{' in line:
             self.readgarbage(3)
             self.finished = True

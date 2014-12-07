@@ -56,7 +56,7 @@ class Agent(Thread):
         self.addr = addr
         self.checkmateserver = checkmateserver
         self.game = None
-        self.color = None
+        self.color = 'White'
 
     def run(self):
         rawdata = self.conn.recv(4096)
@@ -71,7 +71,10 @@ class Agent(Thread):
             self.checkmateserver.l.acquire()
             self.checkmateserver.games[self.game.id] = self.game
             self.checkmateserver.l.release()
-            if self.game.mode == 'multi':
+            self.game.cv.acquire()
+            gamemode = self.game.mode
+            self.game.cv.release()
+            if gamemode == 'multi':
                 self.color = data['color']
             self.conn.send(dumps({'gameid': self.game.id}))
 
@@ -79,13 +82,14 @@ class Agent(Thread):
             self.checkmateserver.l.acquire()
             game = self.checkmateserver.games[int(data['gameid'])]
             self.checkmateserver.l.release()
-            if game.mode == 'multi':
-                self.color = data['color']
             if game.capacity - game.activeplayers > 0:
-                game.lock.acquire()
+                game.cv.acquire()
                 game.activeplayers += 1
-                game.lock.release()
+                gamemode = game.mode
                 self.game = game
+                game.cv.release()
+                if gamemode == 'multi':
+                    self.color = data['color']
                 self.conn.send(dumps({'success': True}))
                 self.game.cv.acquire()
                 self.game.cv.notifyAll()
@@ -103,9 +107,10 @@ class Agent(Thread):
 
         while True:
             print self.color,'1'
+            self.game.cv.acquire()
             if self.game.mode == 'multi':
                 print self.color,'2'
-                self.game.cv.acquire()
+
                 print self.color,'3'
                 if self.game.activeplayers < 2:
                     print self.color,'4'
@@ -117,10 +122,14 @@ class Agent(Thread):
                     while self.game.nextcolor != self.color:
                         self.game.cv.wait()
                     print self.color,'7'
-                self.game.cv.release()
+            self.game.cv.release()
             print self.color,'8'
-
-            if not self.game.active:
+            print self.color,"asd"
+            self.game.cv.acquire()
+            print self.color,"qwe"
+            gameactive = self.game.active
+            self.game.cv.release()
+            if not gameactive:
                 self.game.lock.acquire()
                 self.game.quit()
                 self.game.lock.release()
@@ -143,6 +152,9 @@ class Agent(Thread):
                 self.game.lock.release()
                 self.conn.shutdown(SHUT_RDWR)
                 self.conn.close()
+                self.game.cv.acquire()
+                self.game.cv.notifyAll()
+                self.game.cv.release()
                 return
             data = loads(rawdata.strip())
 
@@ -153,11 +165,15 @@ class Agent(Thread):
                 self.conn.send(dumps({'message': 'You are detached'}))
                 self.conn.shutdown(SHUT_RDWR)
                 self.conn.close()
+                self.game.cv.acquire()
+                self.game.cv.notifyAll()
+                self.game.cv.release()
                 return
             elif data['op'] == 'kill':
                 self.game.lock.acquire()
                 self.game.active = False
                 if self.game.activeplayers == 1:
+                    self.game.quit()
                     self.checkmateserver.l.acquire()
                     del self.checkmateserver.games[self.game.id]
                     self.checkmateserver.l.release()
@@ -167,6 +183,9 @@ class Agent(Thread):
                 self.conn.send(dumps({'success': True}))
                 self.conn.shutdown(SHUT_RDWR)
                 self.conn.close()
+                self.game.cv.acquire()
+                self.game.cv.notifyAll()
+                self.game.cv.release()
                 return
 
             elif data['op'] == 'play':
@@ -174,16 +193,15 @@ class Agent(Thread):
                 params = data['params'][1:]
 
                 if function == 'nextmove':
-                    self.game.lock.acquire()
+                    self.game.cv.acquire()
                     success = self.game.nextmove(params[0], params[1])
                     board = self.game.getboard()
                     isfinished = self.game.isfinished()
-                    self.game.lock.release()
                     if success:
-                        self.game.nextcolor = 'White' if self.game.nextcolor == 'Black' else 'Black'
-                        self.game.cv.acquire()
+                        if self.game.mode == 'multi':
+                            self.game.nextcolor = 'White' if self.game.nextcolor == 'Black' else 'Black'
                         self.game.cv.notifyAll()
-                        self.game.cv.release()
+                    self.game.cv.release()
                     if isfinished:
                         self.conn.send(dumps({'board': board, 'success': success, 'isfinished': isfinished}))
                     else:
@@ -197,7 +215,7 @@ class Agent(Thread):
 
                 elif function == 'load':
                     self.game.lock.acquire()
-                    success = self.game.save(params[0])
+                    success = self.game.load(params[0])
                     self.game.lock.release()
                     self.conn.send(dumps({'success': success}))
 
@@ -208,6 +226,7 @@ class Agent(Thread):
                     self.conn.send(dumps({'hint': hint}))
 
                 elif function == 'addbook':
+                    print 'aq'
                     self.game.lock.acquire()
                     success = self.game.addbook(params[0])
                     self.game.lock.release()
@@ -241,6 +260,7 @@ class Agent(Thread):
                     self.game.lock.acquire()
                     self.game.active = False
                     if self.game.activeplayers == 1:
+                        self.game.quit()
                         self.checkmateserver.l.acquire()
                         del self.checkmateserver.games[self.game.id]
                         self.checkmateserver.l.release()
@@ -277,6 +297,7 @@ class Agent(Thread):
                     self.game.lock.acquire()
                     self.game.setdepth(int(params[0]))
                     self.game.lock.release()
+                    self.conn.send(dumps({'success': True}))
 
                 elif function == 'getdepth':
                     self.game.lock.acquire()
@@ -323,6 +344,7 @@ class CheckmateServer():
         self.games = {}
         self.l = Lock()
         self.sock = None
+        self.agents = []
 
     def start(self):
         self.sock = socket(AF_INET, SOCK_STREAM)
@@ -331,9 +353,14 @@ class CheckmateServer():
         while True:
             conn, addr = self.sock.accept()
             agent = Agent(conn, addr, self)
+            self.agents.append(agent)
             agent.start()
 
 
 if __name__ == '__main__':
     checkmateserver = CheckmateServer(sys.argv[1], int(sys.argv[2]))
-    checkmateserver.start()
+    try:
+        checkmateserver.start()
+    except KeyboardInterrupt:
+
+        print 'Server Shutdown'

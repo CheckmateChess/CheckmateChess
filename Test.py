@@ -10,7 +10,7 @@ class Test:
         data = s.recv(4096)
         print "Received :", data
         asd = loads(data)
-        """
+
         if asd.get('board'):
             for row in asd['board']:
                 print '             ',
@@ -18,5 +18,5 @@ class Test:
                     print frame,
                 print
         print "----------------------------------------"
-        """
+
         return data
