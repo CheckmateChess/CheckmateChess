@@ -73,14 +73,22 @@ class Agent(Thread):
         receives commands as JSON objects, does the job and sends feedbacks to clients
         '''
         rawdata = self.conn.recv(4096)
-
+        self.checkmateserver.printlock.acquire()
+        print self.name, rawdata, 'received'
+        self.checkmateserver.printlock.release()
         if not rawdata:
             self.conn.shutdown(SHUT_RDWR)
             self.conn.close()
+            self.checkmateserver.printlock.acquire()
+            print self.name, rawdata, "not valid", "returning"
+            self.checkmateserver.printlock.release()
             return
         data = loads(rawdata.strip())
 
         if data['op'] == 'start':
+            self.checkmateserver.printlock.acquire()
+            print self.name, "starting a new game with", data['params']
+            self.checkmateserver.printlock.release()
             self.game = Game(data['params'])
             self.checkmateserver.l.acquire()
             self.checkmateserver.games[self.game.id] = self.game
@@ -93,10 +101,16 @@ class Agent(Thread):
             self.conn.send(dumps({'gameid': self.game.id}))
 
         elif data['op'] == 'connect':
+            self.checkmateserver.printlock.acquire()
+            print self.name, "connecting to game with id=", data['gameid']
+            self.checkmateserver.printlock.release()
             self.checkmateserver.l.acquire()
             game = self.checkmateserver.games[int(data['gameid'])]
             self.checkmateserver.l.release()
             if game.capacity - game.activeplayers > 0:
+                self.checkmateserver.printlock.acquire()
+                print self.name, "connected to game with id=", data['gameid']
+                self.checkmateserver.printlock.release()
                 game.cv.acquire()
                 game.activeplayers += 1
                 gamemode = game.mode
@@ -109,11 +123,17 @@ class Agent(Thread):
                 self.game.cv.notifyAll()
                 self.game.cv.release()
             else:
+                self.checkmateserver.printlock.acquire()
+                print self.name, "cannot connect to game with id=", data['gameid']
+                self.checkmateserver.printlock.release()
                 self.conn.send(dumps({'success': False}))
                 self.conn.shutdown(SHUT_RDWR)
                 self.conn.close()
                 return
         else:
+            self.checkmateserver.printlock.acquire()
+            print self.name,data, "Wrong format"
+            self.checkmateserver.printlock.release()
             self.conn.send(dumps({'message': 'Wrong format'}))
             self.conn.shutdown(SHUT_RDWR)
             self.conn.close()
@@ -125,9 +145,15 @@ class Agent(Thread):
             if self.game.mode == 'multi':
                 if self.game.activeplayers < 2:
                     while self.game.active and self.game.activeplayers < 2:
+                        self.checkmateserver.printlock.acquire()
+                        print self.name, "waiting for another player"
+                        self.checkmateserver.printlock.release()
                         self.game.cv.wait()
                 else:
                     while self.game.active and self.game.nextcolor != self.color:
+                        self.checkmateserver.printlock.acquire()
+                        print self.name, "waiting for its turn"
+                        self.checkmateserver.printlock.release()
                         self.game.cv.wait()
             self.game.cv.release()
 
@@ -135,6 +161,9 @@ class Agent(Thread):
             gameactive = self.game.active
             self.game.cv.release()
             if not gameactive:
+                self.checkmateserver.printlock.acquire()
+                print self.name, "Game is already killed. Returning..."
+                self.checkmateserver.printlock.release()
                 self.game.lock.acquire()
                 self.game.quit()
                 self.game.lock.release()
@@ -151,7 +180,13 @@ class Agent(Thread):
                 return
 
             rawdata = self.conn.recv(4096)
+            self.checkmateserver.printlock.acquire()
+            print self.name, rawdata, 'received'
+            self.checkmateserver.printlock.release()
             if not rawdata:
+                self.checkmateserver.printlock.acquire()
+                print self.name, rawdata, 'not valid', 'returning'
+                self.checkmateserver.printlock.release()
                 self.game.lock.acquire()
                 self.game.activeplayers -= 1
                 self.game.lock.release()
@@ -164,6 +199,9 @@ class Agent(Thread):
             data = loads(rawdata.strip())
 
             if data['op'] == 'exit':
+                self.checkmateserver.printlock.acquire()
+                print self.name, "Detaching the game"
+                self.checkmateserver.printlock.release()
                 self.game.lock.acquire()
                 self.game.activeplayers -= 1
                 self.game.lock.release()
@@ -175,6 +213,9 @@ class Agent(Thread):
                 self.game.cv.release()
                 return
             elif data['op'] == 'kill':
+                self.checkmateserver.printlock.acquire()
+                print self.name, "Killing the game"
+                self.checkmateserver.printlock.release()
                 self.game.lock.acquire()
                 self.game.active = False
                 if self.game.activeplayers == 1:
@@ -196,7 +237,9 @@ class Agent(Thread):
             elif data['op'] == 'play':
                 function = data['params'][0]
                 params = data['params'][1:]
-
+                self.checkmateserver.printlock.acquire()
+                print self.name, "Playing" , function , "with" , params
+                self.checkmateserver.printlock.release()
                 if function == 'nextmove':
                     self.game.cv.acquire()
                     success = self.game.nextmove(params[0], params[1])
@@ -363,6 +406,7 @@ class CheckmateServer():
         self.l = Lock()
         self.sock = None
         self.agents = []
+        self.printlock = Lock()
 
     def start(self):
         '''
