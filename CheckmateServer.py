@@ -60,11 +60,22 @@ class Agent(Thread):
 
     def run(self):
         rawdata = self.conn.recv(4096)
+        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',rawdata
+        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',rawdata
+        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',rawdata
+        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',rawdata
+
         if not rawdata:
             self.conn.shutdown(SHUT_RDWR)
             self.conn.close()
             return
         data = loads(rawdata.strip())
+
+        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',data
+        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',data
+        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',data
+        print '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',data
+
 
         if data['op'] == 'start':
             self.game = Game(data['params'])
@@ -79,9 +90,19 @@ class Agent(Thread):
             self.conn.send(dumps({'gameid': self.game.id}))
 
         elif data['op'] == 'connect':
+            print '-------------------------------------------------------------------------'
+            print '-------------------------------------------------------------------------'
+            print '-------------------------------------------------------------------------'
+            print '-------------------------------------------------------------------------'
+
             self.checkmateserver.l.acquire()
             game = self.checkmateserver.games[int(data['gameid'])]
             self.checkmateserver.l.release()
+            print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+            print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+            print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+            print '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
             if game.capacity - game.activeplayers > 0:
                 game.cv.acquire()
                 game.activeplayers += 1
@@ -90,6 +111,7 @@ class Agent(Thread):
                 game.cv.release()
                 if gamemode == 'multi':
                     self.color = data['color']
+                print "--------------------------------",self.color, dumps({'success': True})
                 self.conn.send(dumps({'success': True}))
                 self.game.cv.acquire()
                 self.game.cv.notifyAll()
@@ -320,7 +342,12 @@ class Agent(Thread):
 
                 elif function == 'changemode':
                     self.game.lock.acquire()
-                    success = self.game.changemode(params[0])
+                    if self.game.mode == 'multi' and params[0] == 'single':
+                        success = False
+                    else:
+                        success = self.game.changemode(params[0])
+                    if success and params[0] == 'multi':
+                        self.game.capacity = 2
                     self.game.lock.release()
                     self.conn.send(dumps({'success': success}))
 

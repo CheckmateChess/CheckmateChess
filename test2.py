@@ -30,10 +30,6 @@ test.send(s1, '{"op":"play","params":["enablebook","True"]}')
 count = 0
 while True:
 
-
-
-
-
     if count % 2 == 0:
         test.send(s1, '{"op":"play","params":["setbookmode","%s"]}' % bookmodes[randint(0, 2)])
         move = test.send(s1, '{"op":"play","params":["hint"]}')
