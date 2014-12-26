@@ -1,10 +1,10 @@
 <html>
-	<form method="POST" action="/start/">
-		{% csrf_token %}
-		<input type="submit" value="Start a new game">
-	</form>
-	<form method="POST" action="/connect/">
-		{% csrf_token %}
-		<input type="submit" value="Connect a game">
-	</form>
+<form method="POST" action="/start/">
+    {% csrf_token %}
+    <input type="submit" value="Start a new game">
+</form>
+<form method="POST" action="/connect/">
+    {% csrf_token %}
+    <input type="submit" value="Connect a game">
+</form>
 </html>

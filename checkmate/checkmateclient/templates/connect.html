@@ -1,9 +1,9 @@
 <html>
-	<body>
-		<form method='POST' action='.' enctype="multipart/form-data" >
-			{{ form.as_p }}
-			{% csrf_token %}
-			<input type='submit' name='operation' value='Connect'>
-		</form>
-	</body>
+<body>
+<form method='POST' action='/play/' enctype="multipart/form-data">
+    {{ form.as_p }}
+    {% csrf_token %}
+    <input type='submit' name='operation' value='Connect'>
+</form>
+</body>
 </html>
