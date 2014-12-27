@@ -16,6 +16,10 @@ BOOKMODE_CHOICES = ( ( 'worst', 'worst'  ),
                      ('random','random')
 )
 
+ENABLEBOOK_CHOICES = ( ( 'enabled', 'enabled'  ),
+                     ( 'disabled','disabled'),
+)
+
 
 class startForm(forms.Form):
     color = forms.ChoiceField(choices=COLOR_CHOICES, initial='White')
@@ -31,6 +35,7 @@ class connectForm(forms.Form):
 class hiddenForm(forms.Form):
     gameid = forms.IntegerField(widget=forms.HiddenInput())
     color = forms.ChoiceField(choices=COLOR_CHOICES,widget=forms.HiddenInput())
+    bookenabled = forms.ChoiceField(choices=ENABLEBOOK_CHOICES,widget=forms.HiddenInput())
 
 class playForm(forms.Form):
     moves = forms.CharField(widget=forms.HiddenInput())
@@ -41,5 +46,20 @@ class depthForm(forms.Form):
 class modeForm(forms.Form):
     mode = forms.ChoiceField(choices=MODE_CHOICES)
 
+class addbookForm(forms.Form):
+    book = forms.FileField()
+
+class enablebookForm(forms.Form):
+    enablebook = forms.ChoiceField(choices=ENABLEBOOK_CHOICES)
+
 class bookmodeForm(forms.Form):
     bookmode = forms.ChoiceField( choices=BOOKMODE_CHOICES )
+
+class saveForm(forms.Form):
+    savefile = forms.CharField()
+
+class loadForm(forms.Form):
+    loadfile = forms.CharField()
+
+
+

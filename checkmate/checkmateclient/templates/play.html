@@ -58,15 +58,7 @@
     {% endfor %}
     </table>
 
-    <form style="position: absolute;left:200px;top:20px;"  method="POST" action="/play/" >
-        {{ depthForm.as_p }}
-        {{ hiddenForm.as_p }}
-        {% csrf_token %}
-
-        <input type='submit' name='operation' value='setDepth'>
-    </form>
-
-    <table border="2" style="position:absolute;left:300px;top:20px;" cellpadding="0" cellspacing="0" >
+    <table border="2" style="position:absolute;left:200px;top:20px;" cellpadding="0" cellspacing="0" >
         <tr style="display:block;" >
             <th>White</th>
             <th>Black</th>
@@ -85,6 +77,47 @@
         </tbody>
     </table>
 
+    <form style="position: absolute;left:20px;top:200px;"  method="POST" action="/play/" >
+        {{ depthForm.as_p }}
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='setDepth'>
+    </form>
+
+
+    <form style="position: absolute;left:200px;top:200px;"  method="POST" action="/play/" >
+        {{ modeForm.as_p }}
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='changeMode'>
+    </form>
+
+    <form style="position: absolute;left:20px;top:300px;"  method="POST" action="/play/" >
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='newgame'>
+    </form>
+
+    <form style="position: absolute;left:200px;top:300px;"  method="POST" action="/play/" enctype="multipart/form-data" >
+        {{ addbookForm.as_p }}
+        {{hiddenForm.as_p}}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='addbook'>
+    </form>
+
+    <form style="position: absolute;left:20px;top:400px;"  method="POST" action="/play/" >
+        {{ enablebookForm.as_p }}
+        {{hiddenForm.as_p}}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='enablebook'>
+    </form>
+
+    <form style="position: absolute;left:200px;top:400px;"  method="POST" action="/play/" >
+        {{ bookmodeForm.as_p }}
+        {{hiddenForm.as_p}}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='setbookmode'>
+    </form>
 
     <form name="playForm" method="POST" action="/play/" >
         {{ playForm.as_p }}
@@ -92,6 +125,29 @@
         {% csrf_token %}
         <input type='hidden' name='operation' value='Play'>
     </form>
+
+    <form style="position: absolute;left:20px;top:500px;"  method="POST" action="/play/" >
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='undo'>
+    </form>
+
+    <form style="position: absolute;left:200px;top:500px;"  method="POST" action="/play/" >
+        {{ saveForm }}
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='save'>
+    </form>
+
+    <form style="position: absolute;left:20px;top:600px;"  method="POST" action="/play/" >
+        {{ loadForm }}
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='load'>
+    </form>
+
+
+
 
 <script>
     function control()
