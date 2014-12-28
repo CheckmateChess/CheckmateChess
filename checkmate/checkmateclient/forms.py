@@ -61,5 +61,8 @@ class saveForm(forms.Form):
 class loadForm(forms.Form):
     loadfile = forms.CharField()
 
+class hintForm(forms.Form):
+    hint = forms.CharField(widget=forms.TextInput(attrs={'readonly':'readonly'}))
+
 
 

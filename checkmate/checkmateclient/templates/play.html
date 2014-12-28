@@ -1,11 +1,14 @@
 <html>
 <body>
 
+
     {% load staticfiles %}
+
+    <div name="boardimage" >
     <img  src="{% static "board.gif" %}" width="160px" height="160px" style="position: absolute;left:20px;top:20px;" />
+    </div>
 
-
-    <table border="0" style="position:absolute;left:20px;top:20px;" cellpadding="0" cellspacing="0" >
+    <table name="boardtable" border="0" style="position:absolute;left:20px;top:20px;" cellpadding="0" cellspacing="0" >
     {% for row in board %}
         <tr>
         {% for cell in row %}
@@ -146,19 +149,42 @@
         <input type='submit' name='operation' value='load'>
     </form>
 
+    <form style="position: absolute;left:400px;top:600px;"  method="POST" action="/play/" >
+        {% if hintForm.hint.value != None %}
+            {{ hintForm.as_p }}
+        {% endif %}
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='hint'>
+    </form>
 
+    <form style="position: absolute;left:20px;top:700px;"  method="POST" action="/play/" >
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='exit'>
+    </form>
 
+    <form style="position: absolute;left:300px;top:700px;"  method="POST" action="/play/" >
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='giveup'>
+    </form>
+</body>
 
 <script>
     function control()
     {
         if( document.getElementsByName("moves")[0].value.length == 4 )
         {
+
+            document.getElementsByName('boardtable')[0].innerHTML = ' ';
+            document.getElementsByName('boardimage')[0].innerHTML = ' ';
+            document.getElementsByTagName('body')[0].innerHTML = '<div style="position:absolute;left:20px;top:20px;"  ><h1 style="color:red;" >Please wait</br>while your</br>opponent is</br>playing!</h1></div>'+document.getElementsByTagName('body')[0].innerHTML;
             document.getElementsByName("playForm")[0].submit();
         }
     }
 </script>
 
 
-</body>
+
 </html>

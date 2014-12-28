@@ -3,7 +3,19 @@
 <form method='POST' action='/play/' enctype="multipart/form-data">
     {{ form.as_p }}
     {% csrf_token %}
-    <input type='submit' name='operation' value='Start'>
+    <input type='submit' name='operation' onClick="func();" value='Start'>
 </form>
 </body>
+
+
+<script>
+    function func()
+    {
+        if( document.getElementsByName('mode')[0].value == 'multi' )
+        {
+            document.body.innerHTML = '<h1 style="color:red;" >Wating for opponent!</h1>' + document.body.innerHTML
+        }
+    }
+</script>
+
 </html>

@@ -3,7 +3,16 @@
 <form method='POST' action='/play/' enctype="multipart/form-data">
     {{ form.as_p }}
     {% csrf_token %}
-    <input type='submit' name='operation' value='Connect'>
+    <input type='submit' name='operation' onClick="func();" value='Connect'>
 </form>
 </body>
+
+
+<script>
+    function func()
+    {
+        document.body.innerHTML = '<h1 style="color:red;" >Wating for opponent!</h1>' + document.body.innerHTML
+    }
+</script>
+
 </html>
