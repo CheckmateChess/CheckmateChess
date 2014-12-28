@@ -48,105 +48,122 @@ def play(request):
     data = request.POST
     hintFormx = None
 
-    if not data:
-        return render(request, 'play.html', {})
+    #if not data:
+    #    return render(request, 'play.html', {})
 
     s = socket(AF_INET, SOCK_STREAM)
     s.connect(("0.0.0.0", 20001))
 
+    if data:
+        if data['operation'] == 'Start':
+            bookname = None
+            if request.FILES.get('book'):
+                upload_book(request.FILES.get('book'))
+                bookname = os.path.dirname(os.path.realpath(__file__)) + '/' + request.FILES.get('book').name
 
-    if data['operation'] == 'Start':
-        bookname = None
-        if request.FILES.get('book'):
-            upload_book(request.FILES.get('book'))
-            bookname = os.path.dirname(os.path.realpath(__file__)) + '/' + request.FILES.get('book').name
-
-        s.send('{"op":"start" , "color":"%s","params":["%s","%s","%s"]}' % (
-            data.get('color'), data.get('mode'), data.get('difficulty'),
-            bookname ))
-        gameid = loads(s.recv(4096)).get('gameid')
-        color = data.get('color')
-        mode = data.get('mode')
-        enablebook = False
-    else:
-        gameid = data.get('gameid')
-        color = data.get('color')
-        enablebook = data.get('bookenabled') == 'enabled'
-
-        s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (data.get('color'), data.get('gameid')))
-        s.recv(4096)
-
-
-        if data['operation'] == 'Play':
-            moves = data.get('moves')
-            s.send('{"op":"play" , "params":["nextmove","%s","%s"]}' % ( color, moves[:2] + ' ' + moves[2:] ))
-            feedback = loads(s.recv(4096))
-            print '-----------------------------------------------------------'
-            print feedback
-            print '-----------------------------------------------------------'
-            if feedback.get('message') == 'Game is killed' :
-                return HttpResponseRedirect("/../asd")
-            elif feedback.get('isfinished'):
-                return HttpResponseRedirect("/../qwe")
-
-        elif data['operation'] == 'setDepth':
-            depth = data.get('depth')
-            s.send('{"op":"play" , "params":["setdepth","%s"]}' % depth)
-            s.recv(4096)
-        elif data['operation'] == 'changeMode':
+            s.send('{"op":"start" , "color":"%s","params":["%s","%s","%s"]}' % (
+                data.get('color'), data.get('mode'), data.get('difficulty'),
+                bookname ))
+            gameid = loads(s.recv(4096)).get('gameid')
+            color = data.get('color')
             mode = data.get('mode')
-            s.send('{"op":"play" , "params":["changemode","%s"]}' % mode)
-            s.recv(4096)
-        elif data['operation'] == 'newgame':
-            s.send('{"op":"play" , "params":["newgame"]}')
-            s.recv(4096)
-        elif data['operation'] == 'addbook':
-            upload_book(request.FILES.get('book'))
-            s.send('{"op":"play" , "params":["addbook","%s/books/%s"]}' % (
-                os.path.dirname(os.path.realpath(__file__)), request.FILES.get('book').name))
-            s.recv(4096)
-        elif data['operation'] == 'enablebook':
             enablebook = False
-            if data.get('enablebook') == 'enabled':
-                enablebook = True
-            s.send('{"op":"play" , "params":["enablebook","%s"]}' % enablebook)
+
+            context = {'hiddenForm': hiddenForm(initial={'gameid': gameid, 'color': color, 'bookenabled': enablebook}),
+                       'gameid':gameid
+
+            }
+
+            return render(request, 'showgameid.html', context )
+
+        else:
+            gameid = data.get('gameid')
+            color = data.get('color')
+            enablebook = data.get('bookenabled') == 'enabled'
+
+            s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (data.get('color'), data.get('gameid')))
             s.recv(4096)
-        elif data['operation'] == 'setbookmode':
-            s.send('{"op":"play" , "params":["setbookmode","%s"]}' % data.get('bookmode'))
-            s.recv(4096)
-        elif data['operation'] == 'undo':
-            s.send('{"op":"play" , "params":["undo"]}')
-            s.recv(4096)
-        elif data['operation'] == 'save':
-            s.send('{"op":"play" , "params":["save","%s/saved/%s.pgn"]}' % (
-                os.path.dirname(os.path.realpath(__file__)), data.get('savefile')))
-            s.recv(4096)
-        elif data['operation'] == 'load':
-            if os.path.isfile("%s/saved/%s.pgn" % ( os.path.dirname(os.path.realpath(__file__)), data.get('loadfile'))):
-                s.send('{"op":"play" , "params":["load","%s/saved/%s.pgn"]}' % (
-                    os.path.dirname(os.path.realpath(__file__)), data.get('loadfile')))
+
+
+            if data['operation'] == 'Play':
+                moves = data.get('moves')
+                s.send('{"op":"play" , "params":["nextmove","%s","%s"]}' % ( color, moves[:2] + ' ' + moves[2:] ))
+                feedback = loads(s.recv(4096))
+                print '-----------------------------------------------------------'
+                print feedback
+                print '-----------------------------------------------------------'
+                if feedback.get('message') == 'Game is killed' :
+                    s.close()
+                    return HttpResponseRedirect("/../killed")
+                elif feedback.get('isfinished'):
+                    s.close()
+                    return HttpResponseRedirect("/../finished?winner=%s" % color )
+
+            elif data['operation'] == 'setDepth':
+                depth = data.get('depth')
+                s.send('{"op":"play" , "params":["setdepth","%s"]}' % depth)
                 s.recv(4096)
-        elif data['operation'] == 'hint':
-            s.send('{"op":"play" , "params":["hint"]}')
+            elif data['operation'] == 'changeMode':
+                mode = data.get('mode')
+                s.send('{"op":"play" , "params":["changemode","%s"]}' % mode)
+                s.recv(4096)
+            elif data['operation'] == 'newgame':
+                s.send('{"op":"play" , "params":["newgame"]}')
+                s.recv(4096)
+            elif data['operation'] == 'addbook':
+                upload_book(request.FILES.get('book'))
+                s.send('{"op":"play" , "params":["addbook","%s/books/%s"]}' % (
+                    os.path.dirname(os.path.realpath(__file__)), request.FILES.get('book').name))
+                s.recv(4096)
+            elif data['operation'] == 'enablebook':
+                enablebook = False
+                if data.get('enablebook') == 'enabled':
+                    enablebook = True
+                s.send('{"op":"play" , "params":["enablebook","%s"]}' % enablebook)
+                s.recv(4096)
+            elif data['operation'] == 'setbookmode':
+                s.send('{"op":"play" , "params":["setbookmode","%s"]}' % data.get('bookmode'))
+                s.recv(4096)
+            elif data['operation'] == 'undo':
+                s.send('{"op":"play" , "params":["undo"]}')
+                s.recv(4096)
+            elif data['operation'] == 'save':
+                s.send('{"op":"play" , "params":["save","%s/saved/%s.pgn"]}' % (
+                    os.path.dirname(os.path.realpath(__file__)), data.get('savefile')))
+                s.recv(4096)
+            elif data['operation'] == 'load':
+                if os.path.isfile("%s/saved/%s.pgn" % ( os.path.dirname(os.path.realpath(__file__)), data.get('loadfile'))):
+                    s.send('{"op":"play" , "params":["load","%s/saved/%s.pgn"]}' % (
+                        os.path.dirname(os.path.realpath(__file__)), data.get('loadfile')))
+                    s.recv(4096)
+            elif data['operation'] == 'hint':
+                s.send('{"op":"play" , "params":["hint"]}')
 
-            hintFormx = hintForm(initial={'hint': loads(s.recv(4096)).get('hint')})
+                hintFormx = hintForm(initial={'hint': loads(s.recv(4096)).get('hint')})
 
-        elif data['operation'] == 'exit':
-            s.send('{"op":"exit"}')
-            s.recv(4096)
-            return HttpResponseRedirect("/../")
-        elif data['operation'] == 'giveup':
-            s.send('{"op":"kill"}')
-            s.recv(4096)
-            return HttpResponseRedirect("/../")
+            elif data['operation'] == 'exit':
+                s.send('{"op":"exit"}')
+                s.recv(4096)
+                s.close()
+                return HttpResponseRedirect("/../")
+            elif data['operation'] == 'giveup':
+                s.send('{"op":"kill"}')
+                s.recv(4096)
+                s.close()
+                return HttpResponseRedirect("/../")
 
 
-    s.send('{"op":"play","params":["isfinished"]}')
+    s.send('{"op":"play" , "params":["isfinished"]}')
     feedback = loads(s.recv(4096))
     if feedback.get('message') == 'Game is killed' :
-        return HttpResponseRedirect("/../asd")
+        s.close()
+        return HttpResponseRedirect("/../killed")
     elif feedback.get('isfinished'):
-        return HttpResponseRedirect("/../qwe")
+        s.send('{"op":"play" , "params":["getwinner"]}')
+        winner = loads(s.recv(4096)).get('winner')
+        s.close()
+        return HttpResponseRedirect("/../finished?winner=%s" % winner )
+
 
     s.send('{"op":"play","params":["getbookmode"]}')
     bookmode = loads(s.recv(4096))['bookmode'] or 'random'
@@ -201,3 +218,9 @@ def play(request):
     }
 
     return render(request, 'play.html', context)
+
+def finished(request):
+    return render(request, 'finished.html', { 'winner':request.GET.get('winner') })
+
+def killed(request):
+    return render(request,'killed.html')

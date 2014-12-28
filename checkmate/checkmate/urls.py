@@ -1,7 +1,7 @@
 from django.conf.urls import patterns, include, url
 
 from django.contrib import admin
-from checkmateclient.views import home,start,connect, play
+from checkmateclient.views import *
 
 admin.autodiscover()
 
@@ -15,4 +15,7 @@ urlpatterns = patterns('',
     url(r'^start', start),
     url(r'^connect', connect),
     url(r'^play', play),
+    url(r'^killed', killed),
+    url(r'^finished', finished),
+
 )

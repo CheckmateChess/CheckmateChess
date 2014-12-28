@@ -1,0 +1,15 @@
+<html>
+     <h1 style="color:red" >Your gameid is {{ gameid }}</h1>
+    <form name="playForm" method="POST" action="/play/" >
+        {{hiddenForm.as_p}}
+        {% csrf_token %}
+        <input type='hidden' name='operation' value='REDIRECT'>
+    </form>
+
+<script>
+    setTimeout(function(){
+    document.getElementsByName("playForm")[0].submit();
+}, 5000);
+</script>
+
+</html>
