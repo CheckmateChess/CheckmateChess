@@ -1,6 +1,6 @@
 <html>
 <body>
-<form method='POST' action='/play/' enctype="multipart/form-data">
+<form method='POST' action='/play/'>
     {{ form.as_p }}
     {% csrf_token %}
     <input type='submit' name='operation' onClick="func();" value='Start'>

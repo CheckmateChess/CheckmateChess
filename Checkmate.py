@@ -57,7 +57,10 @@ class Checkmate:
         if self.mode == 'multi':
             self.readnextplayer()
         else:
-            self.readgarbage(3)
+            self.readgarbage(2)
+            newline = self.process.stdout.readline()
+            if newline.find('TimeLimit') != -1:
+                self.readgarbage(3)
             self.readboard()
             self.readgarbage(3)
             self.readnextplayer()
@@ -161,6 +164,10 @@ class Checkmate:
         Returns current game board.
         @return: list of lists, each row is a list, list of rows
         """
+        # self.process.stdin.write('show board\n')
+        #self.readgarbage(4)
+        #self.readboard()
+        #self.readgarbage(1)
         return self.board
 
     def history(self):
@@ -252,6 +259,10 @@ class Checkmate:
         self.process.stdin.write('new\n')
         self.readgarbage(2)
         self.readnextplayer()
+        self.process.stdin.write('show board\n')
+        self.readgarbage(4)
+        self.readboard()
+        self.readgarbage(1)
 
     def changemode(self, mode):
         """

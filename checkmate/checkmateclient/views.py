@@ -14,6 +14,7 @@ from checkmateclient.forms import *
 
 
 
+
 # Create your views here.
 
 def home(request):
@@ -42,11 +43,10 @@ def upload_book(book, gameid=0):
 
 
 def play(request):
-
     data = request.POST
     hintFormx = None
 
-    #if not data:
+    # if not data:
     #    return render(request, 'play.html', {})
 
     s = socket(AF_INET, SOCK_STREAM)
@@ -55,9 +55,6 @@ def play(request):
     if data:
         if data['operation'] == 'Start':
             bookname = None
-            if request.FILES.get('book'):
-                upload_book(request.FILES.get('book'))
-                bookname = os.path.dirname(os.path.realpath(__file__)) + '/books/' + request.FILES.get('book').name
 
             s.send('{"op":"start" , "color":"%s","params":["%s","%s","%s"]}' % (
                 data.get('color'), data.get('mode'), data.get('difficulty'),
@@ -127,7 +124,7 @@ def play(request):
                 s.recv(4096)
             elif data['operation'] == 'load':
                 if os.path.isfile("%s/saved/%s.pgn" % (
-                os.path.dirname(os.path.realpath(__file__)), data.get('loadfile'))):
+                        os.path.dirname(os.path.realpath(__file__)), data.get('loadfile'))):
                     s.send('{"op":"play" , "params":["load","%s/saved/%s.pgn"]}' % (
                         os.path.dirname(os.path.realpath(__file__)), data.get('loadfile')))
                     s.recv(4096)
@@ -185,7 +182,6 @@ def play(request):
     s.recv(4096)
 
     s.close()
-
 
     if enablebook:
         enablebook = 'enabled'
