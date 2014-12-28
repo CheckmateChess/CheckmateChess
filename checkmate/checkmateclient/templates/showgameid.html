@@ -1,4 +1,5 @@
 <html>
+<body>
      <h1 style="color:red" >Your gameid is {{ gameid }}</h1>
     <form name="playForm" method="POST" action="/play/" >
         {{hiddenForm.as_p}}
@@ -6,8 +7,11 @@
         <input type='hidden' name='operation' value='REDIRECT'>
     </form>
 
+</body>
+
 <script>
     setTimeout(function(){
+    document.body.innerHTML = '<h1 style="color:red;" >Waiting for opponent!</h1>' + document.body.innerHTML
     document.getElementsByName("playForm")[0].submit();
 }, 5000);
 </script>

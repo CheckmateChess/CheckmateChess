@@ -13,6 +13,7 @@ from checkmateclient.forms import *
 
 
 
+
 # Create your views here.
 
 def home(request):
@@ -41,9 +42,6 @@ def upload_book(book, gameid=0):
 
 
 def play(request):
-    # print '-----------------------------------------------------------------'
-    #print request.POST
-    #print '-----------------------------------------------------------------'
 
     data = request.POST
     hintFormx = None
@@ -52,14 +50,14 @@ def play(request):
     #    return render(request, 'play.html', {})
 
     s = socket(AF_INET, SOCK_STREAM)
-    s.connect(("0.0.0.0", 20001))
+    s.connect(("0.0.0.0", 20000))
 
     if data:
         if data['operation'] == 'Start':
             bookname = None
             if request.FILES.get('book'):
                 upload_book(request.FILES.get('book'))
-                bookname = os.path.dirname(os.path.realpath(__file__)) + '/' + request.FILES.get('book').name
+                bookname = os.path.dirname(os.path.realpath(__file__)) + '/books/' + request.FILES.get('book').name
 
             s.send('{"op":"start" , "color":"%s","params":["%s","%s","%s"]}' % (
                 data.get('color'), data.get('mode'), data.get('difficulty'),
@@ -70,11 +68,11 @@ def play(request):
             enablebook = False
 
             context = {'hiddenForm': hiddenForm(initial={'gameid': gameid, 'color': color, 'bookenabled': enablebook}),
-                       'gameid':gameid
+                       'gameid': gameid
 
             }
 
-            return render(request, 'showgameid.html', context )
+            return render(request, 'showgameid.html', context)
 
         else:
             gameid = data.get('gameid')
@@ -84,20 +82,16 @@ def play(request):
             s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (data.get('color'), data.get('gameid')))
             s.recv(4096)
 
-
             if data['operation'] == 'Play':
                 moves = data.get('moves')
                 s.send('{"op":"play" , "params":["nextmove","%s","%s"]}' % ( color, moves[:2] + ' ' + moves[2:] ))
                 feedback = loads(s.recv(4096))
-                print '-----------------------------------------------------------'
-                print feedback
-                print '-----------------------------------------------------------'
-                if feedback.get('message') == 'Game is killed' :
+                if feedback.get('message') == 'Game is killed':
                     s.close()
                     return HttpResponseRedirect("/../killed")
                 elif feedback.get('isfinished'):
                     s.close()
-                    return HttpResponseRedirect("/../finished?winner=%s" % color )
+                    return HttpResponseRedirect("/../finished?winner=%s" % color)
 
             elif data['operation'] == 'setDepth':
                 depth = data.get('depth')
@@ -132,7 +126,8 @@ def play(request):
                     os.path.dirname(os.path.realpath(__file__)), data.get('savefile')))
                 s.recv(4096)
             elif data['operation'] == 'load':
-                if os.path.isfile("%s/saved/%s.pgn" % ( os.path.dirname(os.path.realpath(__file__)), data.get('loadfile'))):
+                if os.path.isfile("%s/saved/%s.pgn" % (
+                os.path.dirname(os.path.realpath(__file__)), data.get('loadfile'))):
                     s.send('{"op":"play" , "params":["load","%s/saved/%s.pgn"]}' % (
                         os.path.dirname(os.path.realpath(__file__)), data.get('loadfile')))
                     s.recv(4096)
@@ -152,18 +147,16 @@ def play(request):
                 s.close()
                 return HttpResponseRedirect("/../")
 
-
     s.send('{"op":"play" , "params":["isfinished"]}')
     feedback = loads(s.recv(4096))
-    if feedback.get('message') == 'Game is killed' :
+    if feedback.get('message') == 'Game is killed':
         s.close()
         return HttpResponseRedirect("/../killed")
     elif feedback.get('isfinished'):
         s.send('{"op":"play" , "params":["getwinner"]}')
         winner = loads(s.recv(4096)).get('winner')
         s.close()
-        return HttpResponseRedirect("/../finished?winner=%s" % winner )
-
+        return HttpResponseRedirect("/../finished?winner=%s" % winner)
 
     s.send('{"op":"play","params":["getbookmode"]}')
     bookmode = loads(s.recv(4096))['bookmode'] or 'random'
@@ -184,7 +177,6 @@ def play(request):
 
     s.send('{"op":"play","params":["getboard"]}')
     board = loads(s.recv(4096))['board']
-    #print board
     for i in range(8):
         for j in range(8):
             board[i][j] = [board[i][j], chr(j + ord('a')) + str(8 - i)]
@@ -194,14 +186,11 @@ def play(request):
 
     s.close()
 
-    #print "----------------------------"
-    #print enablebook
-    #print "----------------------------"
+
     if enablebook:
         enablebook = 'enabled'
     else:
         enablebook = 'disabled'
-
 
     context = {'hiddenForm': hiddenForm(initial={'gameid': gameid, 'color': color, 'bookenabled': enablebook}),
                'playForm': playForm(),
@@ -214,13 +203,15 @@ def play(request):
                'bookmodeForm': bookmodeForm(initial={'bookmode': bookmode}),
                'saveForm': saveForm(),
                'loadForm': loadForm(),
-               'hintForm':hintFormx,
+               'hintForm': hintFormx,
     }
 
     return render(request, 'play.html', context)
 
+
 def finished(request):
-    return render(request, 'finished.html', { 'winner':request.GET.get('winner') })
+    return render(request, 'finished.html', {'winner': request.GET.get('winner')})
+
 
 def killed(request):
-    return render(request,'killed.html')
+    return render(request, 'killed.html')
