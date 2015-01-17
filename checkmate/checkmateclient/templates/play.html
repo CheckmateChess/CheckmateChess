@@ -1,190 +1,154 @@
 <html>
+<title>Game id: {{gameid}}</title>
 <body>
 
+{% load staticfiles %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<div name="boardimage" >
+    <img  src="{% static "board.gif" %}" width="640px" height="640px" style="position: absolute;left:20px;top:20px;" />
+</div>
 
-    {% load staticfiles %}
-
-    <div name="boardimage" >
-    <img  src="{% static "board.gif" %}" width="160px" height="160px" style="position: absolute;left:20px;top:20px;" />
-    </div>
-
-    <table name="boardtable" border="0" style="position:absolute;left:20px;top:20px;" cellpadding="0" cellspacing="0" >
-    {% for row in board %}
-        <tr>
-        {% for cell in row %}
-            <td>
-
-                {% if cell.0 == "r"  %}
-                    <img class="cell" name="{{ cell.1 }}"  src="{% static "black_rook.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "n"  %}
-                    <img class="cell" name="{{ cell.1 }}" src="{% static "black_knight.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "b"  %}
-                    <img class="cell" name="{{ cell.1 }}" src="{% static "black_bishop.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "q"  %}
-                    <img class="cell" name="{{ cell.1 }}" src="{% static "black_queen.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "k"  %}
-                    <img class="cell" name="{{ cell.1 }}" src="{% static "black_king.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "p"  %}
-                    <img class="cell" name="{{ cell.1 }}" src="{% static "black_pawn.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "R"  %}
-                    <img class="cell" name="{{ cell.1 }}"  src="{% static "white_rook.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "N"  %}
-                    <img class="cell" name="{{ cell.1 }}" src="{% static "white_knight.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "B"  %}
-                    <img class="cell" name="{{ cell.1 }}" src="{% static "white_bishop.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "Q"  %}
-                    <img class="cell" name="{{ cell.1 }}" src="{% static "white_queen.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "K"  %}
-                    <img class="cell" name="{{ cell.1 }}" src="{% static "white_king.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% elif cell.0 == "P"  %}
-                    <img class="cell" name="{{ cell.1 }}" src="{% static "white_pawn.png" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% else %}
-                    <img class="cell" name="{{ cell.1 }}"  src="{% static "blank.gif" %}" width="20px" height="20px"
-                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
-                {% endif %}
-
-            </td>
-        {% endfor %}
-        </tr>
-    {% endfor %}
-    </table>
-
-    <table border="2" style="position:absolute;left:200px;top:20px;" cellpadding="0" cellspacing="0" >
-        <tr style="display:block;" >
-            <th>White</th>
-            <th>Black</th>
-        </tr>
-        <tbody style="height:100px;overflow:auto;display:block;" >
-        {% for row in history %}
+<div style="position:absolute;left:20px;top:20px;" >
+    <table name="boardtable" border="0"  cellpadding="0" cellspacing="0" >
+        {% for row in board %}
             <tr>
-                <td  >
-                    {{ row.0 }}
+            {% for cell in row %}
+                <td>
+
+                    {% if cell.0 == "r"  %}
+                        <img class="cell" name="{{ cell.1 }}"  src="{% static "black_rook.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "n"  %}
+                        <img class="cell" name="{{ cell.1 }}" src="{% static "black_knight.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "b"  %}
+                        <img class="cell" name="{{ cell.1 }}" src="{% static "black_bishop.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "q"  %}
+                        <img class="cell" name="{{ cell.1 }}" src="{% static "black_queen.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "k"  %}
+                        <img class="cell" name="{{ cell.1 }}" src="{% static "black_king.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "p"  %}
+                        <img class="cell" name="{{ cell.1 }}" src="{% static "black_pawn.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "R"  %}
+                        <img class="cell" name="{{ cell.1 }}"  src="{% static "white_rook.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "N"  %}
+                        <img class="cell" name="{{ cell.1 }}" src="{% static "white_knight.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "B"  %}
+                        <img class="cell" name="{{ cell.1 }}" src="{% static "white_bishop.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "Q"  %}
+                        <img class="cell" name="{{ cell.1 }}" src="{% static "white_queen.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "K"  %}
+                        <img class="cell" name="{{ cell.1 }}" src="{% static "white_king.png" %}" width="80px" height="80px"/>
+                    {% elif cell.0 == "P"  %}
+                        <img class="cell" name="{{ cell.1 }}" src="{% static "white_pawn.png" %}" width="80px" height="80px"/>
+                    {% else %}
+                        <img class="cell" name="{{ cell.1 }}"  src="{% static "blank.gif" %}" width="80px" height="80px"/>
+                    {% endif %}
+
                 </td>
-                <td  >
-                    {{ row.1 }}
-                </td>
+            {% endfor %}
             </tr>
         {% endfor %}
-        </tbody>
     </table>
+</div>
 
-    <form style="position: absolute;left:20px;top:200px;"  method="POST" action="/play/" >
-        {{ depthForm.as_p }}
-        {{ hiddenForm.as_p }}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='setDepth'>
-    </form>
+<input type="hidden" name="moves">
+<input type="hidden" name="color" value="{{color}}">
 
 
-    <form style="position: absolute;left:200px;top:200px;"  method="POST" action="/play/" >
-        {{ modeForm.as_p }}
-        {{ hiddenForm.as_p }}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='changeMode'>
-    </form>
 
-    <form style="position: absolute;left:20px;top:300px;"  method="POST" action="/play/" >
-        {{ hiddenForm.as_p }}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='newgame'>
-    </form>
+<div style="position:absolute;left:680px;top:20px;" >
+    <table border="2"  cellpadding="0" cellspacing="0" >
+            <tr style="display:block;" >
+                <th>White</th>
+                <th>Black</th>
+            </tr>
+            <tbody style="height:400px;overflow:auto;display:block;" >
+            {% for row in history %}
+                <tr>
+                    <td  >
+                        {{ row.0 }}
+                    </td>
+                    <td  >
+                        {{ row.1 }}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+    </table>
+</div>
 
-    <form style="position: absolute;left:200px;top:300px;"  method="POST" action="/play/" enctype="multipart/form-data" >
-        {{ addbookForm.as_p }}
-        {{hiddenForm.as_p}}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='addbook'>
-    </form>
+<div style="display:block;position:absolute;left:800px;top:20px;" >
+    <label>Depth:</label>
+    <input type="number" value="{{depth}}">
+</div>
 
-    <form style="position: absolute;left:20px;top:400px;"  method="POST" action="/play/" >
-        {{ enablebookForm.as_p }}
-        {{hiddenForm.as_p}}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='enablebook'>
-    </form>
+<div style="position:absolute;left:1100px;top:20px;" >
+    <input type="button" value="New Game">
+</div>
 
-    <form style="position: absolute;left:200px;top:400px;"  method="POST" action="/play/" >
-        {{ bookmodeForm.as_p }}
-        {{hiddenForm.as_p}}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='setbookmode'>
-    </form>
+<div style="position:absolute;left:800px;top:100px;" >
+    <label>Book:</label>
+    <input type="file">
+</div>
 
-    <form name="playForm" method="POST" action="/play/" >
-        {{ playForm.as_p }}
-        {{hiddenForm.as_p}}
-        {% csrf_token %}
-        <input type='hidden' name='operation' value='Play'>
-    </form>
+<div style="position:absolute;left:800px;top:200px;" >
+    <input type="checkbox" value="enabled">Enable Book
+</div>
 
-    <form style="position: absolute;left:20px;top:500px;"  method="POST" action="/play/" >
-        {{ hiddenForm.as_p }}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='undo'>
-    </form>
+<div style="position:absolute;left:800px;top:300px;" >
+    <label>Book Mode:</label>
+    <select>
+        <option value="best">Best</option>
+        <option value="random" selected="selected">Random</option>
+        <option value="worst">Worst</option>
 
-    <form style="position: absolute;left:200px;top:500px;"  method="POST" action="/play/" >
-        {{ saveForm }}
-        {{ hiddenForm.as_p }}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='save'>
-    </form>
+    </select>
+</div>
 
-    <form style="position: absolute;left:20px;top:600px;"  method="POST" action="/play/" >
-        {{ loadForm }}
-        {{ hiddenForm.as_p }}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='load'>
-    </form>
+<div style="position:absolute;left:1100px;top:100px;" >
+    <input type="button" value="Hint">
+</div>
 
-    <form style="position: absolute;left:400px;top:600px;"  method="POST" action="/play/" >
-        {% if hintForm.hint.value != None %}
-            {{ hintForm.as_p }}
-        {% endif %}
-        {{ hiddenForm.as_p }}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='hint'>
-    </form>
+<div style="position:absolute;left:1100px;top:200px;" >
+     <label>Save:</label>
+    <input type="text">
+</div>
 
-    <form style="position: absolute;left:20px;top:700px;"  method="POST" action="/play/" >
-        {{ hiddenForm.as_p }}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='exit'>
-    </form>
+<div style="position:absolute;left:1100px;top:300px;" >
+     <label>Load:</label>
+    <input type="text">
+</div>
 
-    <form style="position: absolute;left:300px;top:700px;"  method="POST" action="/play/" >
-        {{ hiddenForm.as_p }}
-        {% csrf_token %}
-        <input type='submit' name='operation' value='giveup'>
-    </form>
-</body>
+<div style="position:absolute;left:800px;top:400px;" >
+    <input type="button" value="Exit">
+</div>
+
+<div style="position:absolute;left:1100px;top:400px;" >
+    <input type="button" value="Give Up!">
+</div>
+
 
 <script>
+
+$.get('/handlepost/','{"op":"play","params":["isfinished"]}',function(data){ alert(data); },'json');
+
+
     function control()
     {
-        if( document.getElementsByName("moves")[0].value.length == 4 )
+        if( $([name"=moves"]).value.length == 4 )
         {
 
-            document.getElementsByName('boardtable')[0].innerHTML = ' ';
-            document.getElementsByName('boardimage')[0].innerHTML = ' ';
+
+
             document.getElementsByTagName('body')[0].innerHTML = '<div style="position:absolute;left:20px;top:20px;"  ><h1 style="color:red;" >Please wait</br>while your</br>opponent is</br>playing!</h1></div>'+document.getElementsByTagName('body')[0].innerHTML;
             document.getElementsByName("playForm")[0].submit();
+
         }
     }
+
+
+    $(".cell").click( function() { document.getElementsByName('moves')[0].value += this.name; control();   });
+*/
 </script>
 
-
-
+</body>
 </html>

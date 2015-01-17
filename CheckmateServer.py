@@ -95,10 +95,11 @@ class Agent(Thread):
             self.checkmateserver.l.release()
             self.game.cv.acquire()
             gamemode = self.game.mode
+            board = self.game.board
             self.game.cv.release()
             if gamemode == 'multi':
                 self.color = data['color']
-            self.conn.send(dumps({'gameid': self.game.id}))
+            self.conn.send(dumps({'gameid': self.game.id,'board':board}))
 
         elif data['op'] == 'connect':
             self.checkmateserver.printlock.acquire()
@@ -115,10 +116,11 @@ class Agent(Thread):
                 game.activeplayers += 1
                 gamemode = game.mode
                 self.game = game
+                board = self.game.board
                 game.cv.release()
                 if gamemode == 'multi':
                     self.color = data['color']
-                self.conn.send(dumps({'success': True}))
+                self.conn.send(dumps({'success': True,'board':board}))
                 self.game.cv.acquire()
                 self.game.cv.notifyAll()
                 self.game.cv.release()

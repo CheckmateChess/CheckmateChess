@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from socket import *
 from json import *
@@ -16,6 +17,9 @@ from checkmateclient.forms import *
 
 
 # Create your views here.
+
+def handlepost(request):
+    pass
 
 def home(request):
     return render(request, 'index.html')
@@ -41,8 +45,58 @@ def upload_book(book, gameid=0):
         for chunk in book.chunks():
             f.write(chunk)
 
+def editboard(board):
+    for i in range(8):
+        for j in range(8):
+            board[i][j] = [board[i][j], chr(j + ord('a')) + str(8 - i)]
+    return board
 
 def play(request):
+    data = request.POST
+    if not data:
+        return HttpResponse("Noooooo")
+
+    s = socket(AF_INET, SOCK_STREAM)
+    s.connect(("0.0.0.0", 20000))
+
+    if data['operation'] == 'Start':
+        s.send('{"op":"start" , "color":"%s","params":["%s","%s","%s"]}' % (
+                data['color'], data['mode'], data['difficulty'],
+                None ))
+        response = loads(s.recv(4096))
+        gameid = response['gameid']
+        board = editboard(response['board'])
+    elif data['operation'] == 'Connect':
+        s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (data['color'], data['gameid']))
+        response = loads(s.recv(4096))
+        if not response['success']:
+            return HttpResponse("You shall not pass!")
+        gameid = data['gameid']
+        board = editboard(response['board'])
+
+
+    context = { 'gameid':gameid,
+                'board':board,
+                'color':data['color'],
+                'depth':10,
+                'enablebook':'disabled',
+                'bookmode':'random',
+    }
+
+    return render( request , 'play.html', context )
+
+def handlepost(request):
+    data = request.GET
+    if not data:
+        return HttpResponse("Noooooo")
+    s = socket(AF_INET, SOCK_STREAM)
+    s.connect(("0.0.0.0", 20000))
+    print data['query']
+    s.send(data['query'])
+    return HttpResponse(s.recv(4096))
+
+
+def play2(request):
     data = request.POST
     hintFormx = None
 

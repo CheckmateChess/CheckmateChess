@@ -17,5 +17,7 @@ urlpatterns = patterns('',
     url(r'^play', play),
     url(r'^killed', killed),
     url(r'^finished', finished),
+    url(r'^handlepost', handlepost),
+
 
 )
