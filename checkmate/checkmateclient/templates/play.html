@@ -4,16 +4,53 @@
 
 {% load staticfiles %}
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+<link rel="stylesheet" href="/resources/demos/style.css">
+<link rel="stylesheet" href="../static/bootstrap.css">
+<style>
+#draggable { width: 150px; height: 150px; padding: 0.5em; }
+</style>
+<script>
+$(function() {
+	$( "#chessboard tr td img" ).draggable({containment : "#boardtable"  });
+	$('#chessboard tr td img').droppable( {
+//		activeClass: "ui-state-default",
+//		hoverClass: "ui-drop-hover",
+//		accept: ":not(.ui-sortable-helper)",
+//		over: function (event, ui) {
+//		var $this = $(this);
+//		},
+	    drop: handleDropEvent
+		  } );
+});
+
+function handleDropEvent( event, ui ) {
+  var draggable = ui.draggable.attr('name');
+  var droppable = $(this).attr("name");
+    alert( 'The square with ID "' + draggable+ '" was dropped onto me!'+ droppable );
+	event.preventDefault();
+	document.getElementsByName('moves')[0].value += draggable;
+	document.getElementsByName('moves')[0].value += droppable;
+	alert(draggable+droppable);
+	control();
+}
+
+
+</script>
 <div name="boardimage" >
     <img  src="{% static "board.gif" %}" width="640px" height="640px" style="position: absolute;left:20px;top:20px;" />
 </div>
 
-<div style="position:absolute;left:20px;top:20px;" >
-    <table name="boardtable" border="0"  cellpadding="0" cellspacing="0" >
+
+
+<div id="boardtable" style="position:absolute;left:20px;top:20px;" >
+    <table name="boardtable" id="chessboard" border="0"  cellpadding="0" cellspacing="0" >
         {% for row in board %}
             <tr>
             {% for cell in row %}
-                <td>
+                <td >
 
                     {% if cell.0 == "r"  %}
                         <img class="cell" name="{{ cell.1 }}"  src="{% static "black_rook.png" %}" width="80px" height="80px"/>
@@ -135,7 +172,7 @@
 
 <script>
 
-$(".cell").click( function() { document.getElementsByName('moves')[0].value += this.name; control();  });
+//$(".cell").click( function() { document.getElementsByName('moves')[0].value += this.name; control();  });
 
 
 $("#id_book").change( function( ) {
@@ -249,7 +286,8 @@ function update_board_and_history(data){
         {
             var loc = String.fromCharCode('a'.charCodeAt(0)+j) + (8-i);
             var cell = $('[name="'+loc+'"]');
-
+//drag dropta sorun cıkıyo boyle 
+// img silinip yeniden yaratılabilir
             if(data.board[i][j]=="r")
                 cell.attr("src","/static/black_rook.png" );
             else if(data.board[i][j]=="n")
