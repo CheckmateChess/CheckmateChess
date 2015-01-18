@@ -54,14 +54,13 @@
 <input type="hidden" name="color" value="{{color}}">
 
 
-
 <div style="position:absolute;left:680px;top:20px;" >
-    <table border="2"  cellpadding="0" cellspacing="0" >
+    <table id="historytable" border="2"  cellpadding="0" cellspacing="0" >
             <tr style="display:block;" >
                 <th>White</th>
                 <th>Black</th>
             </tr>
-            <tbody style="height:400px;overflow:auto;display:block;" >
+        <tbody style="height:400px;overflow:auto;display:block;" >
             {% for row in history %}
                 <tr>
                     <td  >
@@ -78,16 +77,16 @@
 
 <div style="display:block;position:absolute;left:800px;top:20px;" >
     <label>Depth:</label>
-    <input type="number" value="{{depth}}">
+    <input id="depth" type="number" value="{{depth}}">
 </div>
 
 <div style="position:absolute;left:1100px;top:20px;" >
-    <input type="button" value="New Game">
+    <input id="newgame" type="button" value="New Game">
 </div>
 
 <div style="position:absolute;left:800px;top:100px;" >
     <label>Book:</label>
-    <input type="file">
+    <input id="book" type="file">
 </div>
 
 <div style="position:absolute;left:800px;top:200px;" >
@@ -126,28 +125,123 @@
     <input type="button" value="Give Up!">
 </div>
 
+<div align="middle">
+    <img id="pure_white" style="position:absolute;left:0px;top:0px;opacity:0.5;" src="{% static "pure_white.png" %}" hidden="true">
+    <img id="loader" style="position:absolute;left:200px;top:200px;opacity:0.5;" src="{% static "loader.gif" %}" hidden="true" >
+</div>
 
 <script>
 
-$.get('/handlepost/','{"op":"play","params":["isfinished"]}',function(data){ alert(data); },'json');
+$(".cell").click( function() { document.getElementsByName('moves')[0].value += this.name; control();  });
 
 
-    function control()
+$("#book").change( function( ) {
+
+
+
+
+ } )
+
+
+function make_get( data , func )
+{
+    $("#pure_white").show();
+    $("#loader").show();
+    $.get('/handlepost/','query='+data+'&color={{color}}&gameid={{gameid}}',function(data){ func(data);$("#pure_white").hide(); $("#loader").hide();  },'json');
+}
+
+
+$("#depth").change( function() {
+  make_get('{"op":"play","params":["setdepth","'+ this.value +'"]}' , function(data){
+
+  });
+
+
+  });
+
+$("#newgame").click( function() {
+
+    make_get('{"op":"play","params":["newgame"]}' ,function(data){
+
+            update_board_and_history(data);
+
+    } );
+    $('[name="moves"]').val('');
+    $("#depth")[0].value = 3;
+
+});
+
+
+
+function update_board_and_history(data){
+    for(var i=0;i<8;i++)
     {
-        if( $([name"=moves"]).value.length == 4 )
+        for(var j=0;j<8;j++)
         {
+            var loc = String.fromCharCode('a'.charCodeAt(0)+j) + (8-i);
+            var cell = $('[name="'+loc+'"]');
 
-
-
-            document.getElementsByTagName('body')[0].innerHTML = '<div style="position:absolute;left:20px;top:20px;"  ><h1 style="color:red;" >Please wait</br>while your</br>opponent is</br>playing!</h1></div>'+document.getElementsByTagName('body')[0].innerHTML;
-            document.getElementsByName("playForm")[0].submit();
-
+            if(data.board[i][j]=="r")
+                cell.attr("src","/static/black_rook.png" );
+            else if(data.board[i][j]=="n")
+                cell.attr("src","/static/black_knight.png" );
+            else if(data.board[i][j]=="b")
+                cell.attr("src","/static/black_bishop.png" );
+            else if(data.board[i][j]=="q")
+                cell.attr("src","/static/black_queen.png" );
+            else if(data.board[i][j]=="k")
+                cell.attr("src","/static/black_king.png" );
+            else if(data.board[i][j]=="p")
+                cell.attr("src","/static/black_pawn.png" );
+            else if(data.board[i][j]=="R")
+                cell.attr("src","/static/white_rook.png" );
+            else if(data.board[i][j]=="N")
+                cell.attr("src","/static/white_knight.png" );
+            else if(data.board[i][j]=="B")
+                cell.attr("src","/static/white_bishop.png" );
+            else if(data.board[i][j]=="Q")
+                cell.attr("src","/static/white_queen.png" );
+            else if(data.board[i][j]=="K")
+                cell.attr("src","/static/white_king.png" );
+            else if(data.board[i][j]=="P")
+                cell.attr("src","/static/white_pawn.png" );
+            else
+                cell.attr("src","/static/blank.gif" );
         }
     }
 
+    historytable = $("#historytable tbody")[1];
+    historytable.innerHTML = "";
 
-    $(".cell").click( function() { document.getElementsByName('moves')[0].value += this.name; control();   });
-*/
+    for(var i=0;i<data.history.White.length;i++)
+    {
+        var current = historytable.insertRow();
+        current.innerHTML = "<td>" + data.history.White[i] + "</td><td>" + data.history.Black[i] + "</td>";
+    }
+
+}
+
+function control()
+{
+
+    if( $('[name="moves"]').val().length == 4 )
+    {
+        make_get('{"op":"play","params":["nextmove","{{color}}","'+$('[name="moves"]').val()+'"]}' ,function(data){
+
+            update_board_and_history(data);
+
+        } );
+
+
+        $('[name="moves"]').val('');
+
+
+
+    }
+}
+
+
+
 </script>
 
 </body>

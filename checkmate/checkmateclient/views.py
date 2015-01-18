@@ -7,7 +7,8 @@ import os.path
 
 from checkmateclient.forms import *
 
-
+HOST = '0.0.0.0'
+PORT = 20000
 
 
 
@@ -57,7 +58,7 @@ def play(request):
         return HttpResponse("Noooooo")
 
     s = socket(AF_INET, SOCK_STREAM)
-    s.connect(("0.0.0.0", 20000))
+    s.connect((HOST, PORT))
 
     if data['operation'] == 'Start':
         s.send('{"op":"start" , "color":"%s","params":["%s","%s","%s"]}' % (
@@ -74,11 +75,12 @@ def play(request):
         gameid = data['gameid']
         board = editboard(response['board'])
 
+    s.close()
 
     context = { 'gameid':gameid,
                 'board':board,
                 'color':data['color'],
-                'depth':10,
+                'depth':3,
                 'enablebook':'disabled',
                 'bookmode':'random',
     }
@@ -90,8 +92,9 @@ def handlepost(request):
     if not data:
         return HttpResponse("Noooooo")
     s = socket(AF_INET, SOCK_STREAM)
-    s.connect(("0.0.0.0", 20000))
-    print data['query']
+    s.connect((HOST, PORT))
+    s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (data['color'], data['gameid']))
+    s.recv(4096)
     s.send(data['query'])
     return HttpResponse(s.recv(4096))
 
@@ -104,7 +107,7 @@ def play2(request):
     #    return render(request, 'play.html', {})
 
     s = socket(AF_INET, SOCK_STREAM)
-    s.connect(("0.0.0.0", 20000))
+    s.connect((HOST, PORT))
 
     if data:
         if data['operation'] == 'Start':

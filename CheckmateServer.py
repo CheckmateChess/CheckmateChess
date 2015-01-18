@@ -96,6 +96,7 @@ class Agent(Thread):
             self.game.cv.acquire()
             gamemode = self.game.mode
             board = self.game.board
+            self.game.setdepth(3)
             self.game.cv.release()
             if gamemode == 'multi':
                 self.color = data['color']
@@ -182,6 +183,7 @@ class Agent(Thread):
                 return
 
             rawdata = self.conn.recv(4096)
+
             self.checkmateserver.printlock.acquire()
             print self.name, rawdata, 'received'
             self.checkmateserver.printlock.release()
@@ -246,6 +248,7 @@ class Agent(Thread):
                     self.game.cv.acquire()
                     success = self.game.nextmove(params[0], params[1])
                     board = self.game.getboard()
+                    history = self.game.history()
                     isfinished = self.game.isfinished()
                     if success:
                         if self.game.mode == 'multi':
@@ -253,9 +256,9 @@ class Agent(Thread):
                         self.game.cv.notifyAll()
                     self.game.cv.release()
                     if isfinished:
-                        self.conn.send(dumps({'board': board, 'success': success, 'isfinished': isfinished}))
+                        self.conn.send(dumps({'board': board, 'success': success, 'history':history, 'isfinished': isfinished}))
                     else:
-                        self.conn.send(dumps({'board': board, 'success': success}))
+                        self.conn.send(dumps({'board': board, 'success': success, 'history':history }))
 
                 elif function == 'save':
                     self.game.lock.acquire()
@@ -365,8 +368,10 @@ class Agent(Thread):
                     self.game.lock.acquire()
                     self.game.newgame()
                     board = self.game.getboard()
+                    history = self.game.history()
+                    self.game.setdepth(3)
                     self.game.lock.release()
-                    self.conn.send(dumps({'board': board}))
+                    self.conn.send(dumps({'board': board,'history':history}))
 
                 elif function == 'changemode':
                     self.game.lock.acquire()
