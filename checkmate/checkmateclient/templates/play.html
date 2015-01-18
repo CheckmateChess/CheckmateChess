@@ -85,12 +85,15 @@
 </div>
 
 <div style="position:absolute;left:800px;top:100px;" >
-    <label>Book:</label>
-    <input id="book" type="file">
+    <form id="book" action="/play/" method="post" enctype="multipart/form-data" >
+        {{bookForm.as_p}}
+        {% csrf_token %}
+        <input type="hidden" name="operation" value="book" >
+    </form>
 </div>
 
 <div style="position:absolute;left:800px;top:200px;" >
-    <input type="checkbox" value="enabled">Enable Book
+    <input id="enablebook" type="checkbox" value="enabled">Enable Book
 </div>
 
 <div style="position:absolute;left:800px;top:300px;" >
@@ -104,25 +107,25 @@
 </div>
 
 <div style="position:absolute;left:1100px;top:100px;" >
-    <input type="button" value="Hint">
+    <input id="hint" type="button" value="Hint">
 </div>
 
 <div style="position:absolute;left:1100px;top:200px;" >
      <label>Save:</label>
-    <input type="text">
+    <input id="save" type="text">
 </div>
 
 <div style="position:absolute;left:1100px;top:300px;" >
      <label>Load:</label>
-    <input type="text">
+    <input id="load" type="text">
 </div>
 
 <div style="position:absolute;left:800px;top:400px;" >
-    <input type="button" value="Exit">
+    <input id="exit" type="button" value="Exit">
 </div>
 
 <div style="position:absolute;left:1100px;top:400px;" >
-    <input type="button" value="Give Up!">
+    <input id="kill" type="button" value="Give Up!">
 </div>
 
 <div align="middle">
@@ -135,13 +138,48 @@
 $(".cell").click( function() { document.getElementsByName('moves')[0].value += this.name; control();  });
 
 
-$("#book").change( function( ) {
+$("#id_book").change( function( ) {
 
-
-
+    $("#book")[0].submit();
 
  } )
 
+
+$("#save").keypress( function( e ){
+
+    if( e.keyCode == 13 )
+    {
+        make_get('{"op":"play","params":["save","'+ this.value +'"]}' ,function(data){
+            $("#save").val('');
+    } );
+    }
+
+} );
+
+$("#load").keypress( function( e ){
+
+    if( e.keyCode == 13 )
+    {
+        make_get('{"op":"play","params":["load","'+ this.value +'"]}' ,function(data){
+            $("#load").val('');
+            update_board_and_history(data);
+            $('[name="moves"]').val('');
+            $("#depth")[0].value = 3;
+    } );
+    }
+
+} );
+
+
+$("#hint").click(  function(){
+
+    make_get('{"op":"play","params":["hint"]}' ,function(data){
+
+            alert(data.hint);
+
+    } );
+
+} );
 
 function make_get( data , func )
 {
@@ -158,6 +196,37 @@ $("#depth").change( function() {
 
 
   });
+
+$("#enablebook").change(function(){
+
+    make_get('{"op":"play","params":["enablebook","'+ $("#enablebook")[0].checked +'"]}' ,function(data){
+
+    } );
+
+});
+
+$("#exit").click(function(){
+
+    make_get('{"op":"exit"}' ,function(data){
+        document.cookie = "gameid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        document.cookie = "color=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        window.location="/";
+
+    } );
+
+});
+
+
+$("#kill").click(function(){
+
+    make_get('{"op":"kill"}' ,function(data){
+        document.cookie = "gameid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        document.cookie = "color=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+        window.location="/";
+    } );
+
+});
+
 
 $("#newgame").click( function() {
 
@@ -228,6 +297,10 @@ function control()
     {
         make_get('{"op":"play","params":["nextmove","{{color}}","'+$('[name="moves"]').val()+'"]}' ,function(data){
 
+            if(data.success==false)
+            {
+                alert('Invalid move');
+            }
             update_board_and_history(data);
 
         } );

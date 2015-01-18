@@ -45,7 +45,7 @@ class depthForm(forms.Form):
 class modeForm(forms.Form):
     mode = forms.ChoiceField(choices=MODE_CHOICES)
 
-class addbookForm(forms.Form):
+class bookForm(forms.Form):
     book = forms.FileField()
 
 class enablebookForm(forms.Form):

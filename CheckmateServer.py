@@ -269,8 +269,11 @@ class Agent(Thread):
                 elif function == 'load':
                     self.game.lock.acquire()
                     success = self.game.load(params[0])
+                    board = self.game.getboard()
+                    self.game.setdepth(3)
+                    history = self.game.history()
                     self.game.lock.release()
-                    self.conn.send(dumps({'success': success}))
+                    self.conn.send(dumps({'success': success , 'board':board, 'history':history}))
 
                 elif function == 'hint':
                     self.game.lock.acquire()

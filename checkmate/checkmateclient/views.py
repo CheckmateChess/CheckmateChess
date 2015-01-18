@@ -53,41 +53,71 @@ def editboard(board):
     return board
 
 def play(request):
+
+    cookie = request.COOKIES
     data = request.POST
-    if not data:
-        return HttpResponse("Noooooo")
 
     s = socket(AF_INET, SOCK_STREAM)
     s.connect((HOST, PORT))
 
-    if data['operation'] == 'Start':
+
+    if  data.get('operation') == 'book':
+        upload_book(request.FILES['book'])
+        s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (cookie['color'], cookie['gameid']))
+        response = loads(s.recv(4096))
+        gameid = cookie['gameid']
+        color = cookie['color']
+        board = editboard(response['board'])
+        s.send('{"op":"play" , "params":["addbook","%s/books/%s"]}' % (
+                    os.path.dirname(os.path.realpath(__file__)), request.FILES.get('book').name))
+        s.recv(4096)
+
+    elif cookie.get('gameid') and cookie.get('color'):
+        s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (cookie['color'], cookie['gameid']))
+        response = loads(s.recv(4096))
+        if not response['success']:
+            return HttpResponse("You shall not pass!")
+        gameid = cookie['gameid']
+        color = cookie['color']
+        board = editboard(response['board'])
+    elif data.get('operation') == 'Start':
         s.send('{"op":"start" , "color":"%s","params":["%s","%s","%s"]}' % (
                 data['color'], data['mode'], data['difficulty'],
                 None ))
         response = loads(s.recv(4096))
         gameid = response['gameid']
+        color = data['color']
         board = editboard(response['board'])
-    elif data['operation'] == 'Connect':
+    elif data.get('operation') == 'Connect':
         s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (data['color'], data['gameid']))
         response = loads(s.recv(4096))
         if not response['success']:
             return HttpResponse("You shall not pass!")
         gameid = data['gameid']
+        color = data['color']
         board = editboard(response['board'])
+
+
 
     s.close()
 
     context = { 'gameid':gameid,
                 'board':board,
-                'color':data['color'],
+                'color':color,
                 'depth':3,
                 'enablebook':'disabled',
                 'bookmode':'random',
+                'bookForm':bookForm(),
     }
 
-    return render( request , 'play.html', context )
+
+    response = render(request, 'play.html', context)
+    response.set_cookie("gameid", str(gameid))
+    response.set_cookie("color",str(color))
+    return response
 
 def handlepost(request):
+
     data = request.GET
     if not data:
         return HttpResponse("Noooooo")
@@ -95,7 +125,12 @@ def handlepost(request):
     s.connect((HOST, PORT))
     s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (data['color'], data['gameid']))
     s.recv(4096)
-    s.send(data['query'])
+    query = loads(data['query']);
+    if query.get('params') and 'save' in query.get('params'):
+        query.get('params')[1] = os.path.dirname(os.path.realpath(__file__)) + '/saved/' + query.get('params')[1] + '.pgn';
+    if query.get('params') and 'load' in query.get('params'):
+        query.get('params')[1] = os.path.dirname(os.path.realpath(__file__)) + '/saved/' + query.get('params')[1] + '.pgn';
+    s.send(dumps(query))
     return HttpResponse(s.recv(4096))
 
 
