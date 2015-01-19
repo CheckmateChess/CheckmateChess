@@ -1,10 +1,24 @@
 <html>
 <body>
-<form method='POST' action='/play/' enctype="multipart/form-data">
-    {{ form.as_p }}
-    {% csrf_token %}
-    <input type='submit' name='operation' onClick="func();" value='Connect'>
-</form>
+<link rel="stylesheet" href="/static/bootstrap.css">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+
+<div class="row" style="margin-top:100px"  >
+
+    <form class="col-md-2 col-md-offset-5" method='POST' action='/play/' enctype="multipart/form-data">
+        {{ form.as_p }}
+        {% csrf_token %}
+        <input  class="btn btn-default" style="text-align:center" type='submit' name='operation' onClick="func();" value='Connect'>
+    </form>
+
+</div>
+
 </body>
+
+<script>
+    $("select").addClass("btn btn-default dropdown-toggle");
+    $("input").addClass("form-control");
+
+</script>
 
 </html>

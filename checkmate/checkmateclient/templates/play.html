@@ -3,6 +3,7 @@
 <body>
 
 {% load staticfiles %}
+<link rel="stylesheet" href="/static/bootstrap.css">
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
 <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
 <script src="//code.jquery.com/jquery-1.10.2.js"></script>
@@ -65,7 +66,7 @@
 
 
 <div style="position:absolute;left:680px;top:20px;" >
-    <table id="historytable" border="2"  cellpadding="0" cellspacing="0" >
+    <table class="table table-bordered" id="historytable" border="2"  cellpadding="0" cellspacing="0" >
             <tr style="display:block;" >
                 <th>White</th>
                 <th>Black</th>
@@ -73,10 +74,10 @@
         <tbody style="height:400px;overflow:auto;display:block;" >
             {% for row in history %}
                 <tr>
-                    <td  >
+                    <td >
                         {{ row.0 }}
                     </td>
-                    <td  >
+                    <td >
                         {{ row.1 }}
                     </td>
                 </tr>
@@ -85,16 +86,18 @@
     </table>
 </div>
 
-<div style="display:block;position:absolute;left:800px;top:20px;" >
+<div style="display:block;position:absolute;left:900px;top:20px;" >
     <label>Depth:</label>
-    <input id="depth" type="number" value="{{depth}}">
+    <input class="form-control" id="depth" type="number" value="{{depth}}">
 </div>
 
-<div style="position:absolute;left:1100px;top:20px;" >
-    <input id="newgame" type="button" value="New Game">
+<div style="position:absolute;left:300px;top:740px;" >
+    <input  class="btn btn-default"  id="newgame" type="button" value="New Game">
 </div>
 
-<div style="position:absolute;left:800px;top:100px;" >
+
+
+<div style="position:absolute;left:900px;top:100px;" >
     <form id="book" action="/play/" method="post" enctype="multipart/form-data" >
         {{bookForm.as_p}}
         {% csrf_token %}
@@ -102,11 +105,15 @@
     </form>
 </div>
 
-<div style="position:absolute;left:800px;top:200px;" >
+
+
+<div style="position:absolute;left:680px;top:500px;" >
     <input id="enablebook" type="checkbox" value="enabled">Enable Book
 </div>
 
-<div style="position:absolute;left:800px;top:300px;" >
+
+
+<div style="position:absolute;left:900px;top:300px;" >
     <label>Book Mode:</label>
     <select>
         <option value="best">Best</option>
@@ -116,26 +123,29 @@
     </select>
 </div>
 
-<div style="position:absolute;left:1100px;top:100px;" >
-    <input id="hint" type="button" value="Hint">
+
+
+<div style="position:absolute;left:680px;top:550px;" >
+    <input class="btn btn-default" id="hint" type="button" value="Hint">
 </div>
 
-<div style="position:absolute;left:1100px;top:200px;" >
+
+<div style="position:absolute;left:20px;top:720px;" >
      <label>Save:</label>
-    <input id="save" type="text">
-</div>
+    <input class="form-control" id="save" type="text" ></br></br>
 
-<div style="position:absolute;left:1100px;top:300px;" >
      <label>Load:</label>
-    <input id="load" type="text">
+    <input class="form-control" id="load" type="text">
 </div>
 
-<div style="position:absolute;left:800px;top:400px;" >
-    <input id="exit" type="button" value="Exit">
+
+
+<div style="position:absolute;left:300px;top:830px;" >
+    <input  class="btn btn-default" id="exit" type="button" value="Exit">
 </div>
 
-<div style="position:absolute;left:1100px;top:400px;" >
-    <input id="kill" type="button" value="Give Up!">
+<div style="position:absolute;left:400px;top:830px;" >
+    <input class="btn btn-default"   id="kill" type="button" value="Give Up!">
 </div>
 
 <div align="middle">
@@ -144,8 +154,11 @@
 </div>
 
 <script>
-
+$("select").addClass("btn btn-default dropdown-toggle");
 $("#id_book").change( function( ) {
+
+$("#historytable tr td").style.width
+
 
     $("#book")[0].submit();
 
