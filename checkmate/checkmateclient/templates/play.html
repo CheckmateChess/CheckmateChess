@@ -190,7 +190,9 @@ $("#hint").click(  function(){
 
 function make_get( data , func )
 {
-    $.get('/handlepost/','query='+data+'&color={{color}}&gameid={{gameid}}',function(data){ func(data);  },'json');
+    $("#pure_white").show();
+    $("#loader").show();
+    $.get('/handlepost/','query='+data+'&color={{color}}&gameid={{gameid}}',function(data){ func(data);  $("#pure_white").hide(); $("#loader").hide(); },'json');
 }
 
 $("#depth").change( function() {
@@ -302,7 +304,7 @@ function update_board_and_history(data){
 
 }
 
-
+/*
 window.onload = function start() {
 
 
@@ -313,7 +315,7 @@ window.onload = function start() {
 
             if( data.message === 'Game is killed' )
             {
-                alert("Game is killed!");
+                //alert("Game is killed!");
                 document.cookie = "gameid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
                 document.cookie = "color=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
                 window.location="/";
@@ -322,7 +324,7 @@ window.onload = function start() {
             {
                 make_get('{"op":"play","params":["getwinner"]}' , function(data){
 
-                    alert("The winner is "+data.winner);
+                    //alert("The winner is "+data.winner);
                     document.cookie = "gameid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
                     document.cookie = "color=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
                     window.location ="/";
@@ -359,20 +361,30 @@ window.onload = function start() {
 
 
         })
-    }, 100);
+    }, 2000);
 }
+*/
 
 
 function control()
 {
-    alert('controldeyim');
+    //alert('controldeyim');
 
     if( $('[name="moves"]').val().length == 4 )
     {
+        //alert('{"op":"play","params":["nextmove","{{color}}","'+$('[name="moves"]').val()+'"]}');
         make_get('{"op":"play","params":["nextmove","{{color}}","'+$('[name="moves"]').val()+'"]}' ,function(data){
 
-            if(data.isfinished == true)
+            if( data.message === 'Game is killed' )
             {
+                alert("Game is killed!");
+                document.cookie = "gameid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                document.cookie = "color=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                window.location="/";
+            }
+            else if(data.isfinished == true)
+            {
+                ////alert('control1');
                 make_get('{"op":"play","params":["getwinner"]}' , function(data){
 
                     alert("The winner is "+data.winner);
@@ -383,22 +395,23 @@ function control()
             }
             else if(data.success==false)
             {
+                //alert('control2');
                 alert('Invalid move');
             }
+            make_get('{"op":"play","params":["nextmove","{{color}}","'+$('[name="moves"]').val()+'"]}' ,function(data){
 
-            update_board_and_history(data);
-            if( ! ( data.currentplayer === '{{color}}' ) )
-            {
-                $("#pure_white").show();
-                $("#loader").show();
-            }
+                update_board_and_history(data);
+
+
+            });
+
 
         } );
 
 
         $('[name="moves"]').val('');
 
-
+    //alert('controlden cikiyorum!');
 
     }
 }

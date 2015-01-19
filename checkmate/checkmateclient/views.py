@@ -98,7 +98,8 @@ def play(request):
         board = editboard(response['board'])
 
 
-
+    s.send('{"op":"exit"}')
+    s.recv(4096)
     s.close()
 
     context = { 'gameid':gameid,
@@ -131,7 +132,12 @@ def handlepost(request):
     if query.get('params') and 'load' in query.get('params'):
         query.get('params')[1] = os.path.dirname(os.path.realpath(__file__)) + '/saved/' + query.get('params')[1] + '.pgn';
     s.send(dumps(query))
-    return HttpResponse(s.recv(4096))
+    response = s.recv(4096)
+    s.send('{"op":"exit"}')
+    s.recv(4096)
+    s.close()
+
+    return HttpResponse(response)
 
 
 def play2(request):
