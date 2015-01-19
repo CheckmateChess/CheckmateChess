@@ -256,9 +256,9 @@ class Agent(Thread):
                         self.game.cv.notifyAll()
                     self.game.cv.release()
                     if isfinished:
-                        self.conn.send(dumps({'board': board, 'success': success, 'history':history, 'isfinished': isfinished}))
+                        self.conn.send(dumps({'board': board, 'success': success, 'history':history,'currentplayer':self.game.nextcolor , 'isfinished': isfinished}))
                     else:
-                        self.conn.send(dumps({'board': board, 'success': success, 'history':history }))
+                        self.conn.send(dumps({'board': board, 'success': success, 'history':history,'currentplayer':self.game.nextcolor }))
 
                 elif function == 'save':
                     self.game.lock.acquire()

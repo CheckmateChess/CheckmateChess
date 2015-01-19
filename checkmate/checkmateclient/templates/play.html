@@ -145,9 +145,6 @@
 
 <script>
 
-//$(".cell").click( function() { document.getElementsByName('moves')[0].value += this.name; control();  });
-
-
 $("#id_book").change( function( ) {
 
     $("#book")[0].submit();
@@ -193,11 +190,8 @@ $("#hint").click(  function(){
 
 function make_get( data , func )
 {
-    $("#pure_white").show();
-    $("#loader").show();
-    $.get('/handlepost/','query='+data+'&color={{color}}&gameid={{gameid}}',function(data){ func(data);$("#pure_white").hide(); $("#loader").hide();  },'json');
+    $.get('/handlepost/','query='+data+'&color={{color}}&gameid={{gameid}}',function(data){ func(data);  },'json');
 }
-
 
 $("#depth").change( function() {
   make_get('{"op":"play","params":["setdepth","'+ this.value +'"]}' , function(data){
@@ -254,50 +248,6 @@ $("#newgame").click( function() {
 
 function update_board_and_history(data){
 
-    /*
-    <div id="boardtable" style="position:absolute;left:20px;top:20px;" >
-    <table name="boardtable" id="chessboard" border="0"  cellpadding="0" cellspacing="0" >
-        {% for row in board %}
-            <tr>
-            {% for cell in row %}
-                <td >
-
-                    {% if cell.0 == "r"  %}
-                        <img class="cell" name="{{ cell.1 }}"  src="{% static "black_rook.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "n"  %}
-                        <img class="cell" name="{{ cell.1 }}" src="{% static "black_knight.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "b"  %}
-                        <img class="cell" name="{{ cell.1 }}" src="{% static "black_bishop.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "q"  %}
-                        <img class="cell" name="{{ cell.1 }}" src="{% static "black_queen.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "k"  %}
-                        <img class="cell" name="{{ cell.1 }}" src="{% static "black_king.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "p"  %}
-                        <img class="cell" name="{{ cell.1 }}" src="{% static "black_pawn.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "R"  %}
-                        <img class="cell" name="{{ cell.1 }}"  src="{% static "white_rook.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "N"  %}
-                        <img class="cell" name="{{ cell.1 }}" src="{% static "white_knight.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "B"  %}
-                        <img class="cell" name="{{ cell.1 }}" src="{% static "white_bishop.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "Q"  %}
-                        <img class="cell" name="{{ cell.1 }}" src="{% static "white_queen.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "K"  %}
-                        <img class="cell" name="{{ cell.1 }}" src="{% static "white_king.png" %}" width="80px" height="80px"/>
-                    {% elif cell.0 == "P"  %}
-                        <img class="cell" name="{{ cell.1 }}" src="{% static "white_pawn.png" %}" width="80px" height="80px"/>
-                    {% else %}
-                        <img class="cell" name="{{ cell.1 }}"  src="{% static "blank.gif" %}" width="80px" height="80px"/>
-                    {% endif %}
-
-                </td>
-            {% endfor %}
-            </tr>
-        {% endfor %}
-    </table>
-</div>
-
-    */
 
     $('#chessboard tr').remove();
 
@@ -309,8 +259,7 @@ function update_board_and_history(data){
             var cell = row.insertCell();
 
             var loc = String.fromCharCode('a'.charCodeAt(0)+j) + (8-i);
-//drag dropta sorun cıkıyo boyle 
-// img silinip yeniden yaratılabilir
+
             if(data.board[i][j]=="r")
                 cell.innerHTML = '<img class="cell" name="'+loc+'"  src="/static/black_rook.png" width="80px" height="80px"/>'
             else if(data.board[i][j]=="n")
@@ -353,8 +302,70 @@ function update_board_and_history(data){
 
 }
 
+
+window.onload = function start() {
+
+
+    window.setInterval(function () {
+
+        make_get('{"op":"play","params":["isfinished"]}' ,function(data){
+
+
+            if( data.message === 'Game is killed' )
+            {
+                alert("Game is killed!");
+                document.cookie = "gameid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                document.cookie = "color=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                window.location="/";
+            }
+            else if( data.isfinished == true )
+            {
+                make_get('{"op":"play","params":["getwinner"]}' , function(data){
+
+                    alert("The winner is "+data.winner);
+                    document.cookie = "gameid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                    document.cookie = "color=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                    window.location ="/";
+                })
+            }
+            else
+            {
+                make_get('{"op":"play","params":["currentplayer"]}' , function(data){
+
+                    if( ! ( data.currentplayer === '{{color}}' ) )
+                    {
+                        console.log(data.currentplayer);
+                        make_get('{"op":"play","params":["getboard"]}' , function(data1){
+
+                            make_get('{"op":"play","params":["history"]}' , function(data2){
+
+                                update_board_and_history( { board:data1.board , history:data2.history   } );
+
+
+                            })
+
+                        });
+                    }
+                    else
+                    {
+
+                        $("#pure_white").hide();
+                        $("#loader").hide();
+                    }
+
+                });
+
+            }
+
+
+        })
+    }, 100);
+}
+
+
 function control()
 {
+    alert('controldeyim');
 
     if( $('[name="moves"]').val().length == 4 )
     {
@@ -362,17 +373,25 @@ function control()
 
             if(data.isfinished == true)
             {
-                make_get('{"op":"play","params":["getwinner"]' , function(data){
+                make_get('{"op":"play","params":["getwinner"]}' , function(data){
 
                     alert("The winner is "+data.winner);
-
+                    document.cookie = "gameid=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                    document.cookie = "color=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+                    window.location ="/";
                 })
             }
             else if(data.success==false)
             {
                 alert('Invalid move');
             }
+
             update_board_and_history(data);
+            if( ! ( data.currentplayer === '{{color}}' ) )
+            {
+                $("#pure_white").show();
+                $("#loader").show();
+            }
 
         } );
 
@@ -385,6 +404,9 @@ function control()
 }
 
 function make_draggable() {
+
+        console.log('make_draggable');
+
 	$( "#chessboard tr td img" ).draggable({containment : "#boardtable"  });
 	$('#chessboard tr td img').droppable( {
 //		activeClass: "ui-state-default",
@@ -399,6 +421,9 @@ function make_draggable() {
 make_draggable();
 
 function handleDropEvent( event, ui ) {
+
+    console.log('handleDropEvent');
+
   var draggable = ui.draggable.attr('name');
   var droppable = $(this).attr("name");
 	//event.preventDefault();
