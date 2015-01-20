@@ -86,18 +86,18 @@
     </table>
 </div>
 
-<div style="display:block;position:absolute;left:900px;top:20px;" >
+<div style="display:block;position:absolute;left:300px;top:720px;" >
     <label>Depth:</label>
     <input class="form-control" id="depth" type="number" value="{{depth}}">
 </div>
 
-<div style="position:absolute;left:300px;top:740px;" >
-    <input  class="btn btn-default"  id="newgame" type="button" value="New Game">
+<div style="position:absolute;left:550px;top:745px;" >
+    <input style="background-color:#5cb85c; color:#FFF"  class="btn btn-default"  id="newgame" type="button" value="New Game">
 </div>
 
 
 
-<div style="position:absolute;left:900px;top:100px;" >
+<div style="position:absolute;left:300px;top:810px;" >
     <form id="book" action="/play/" method="post" enctype="multipart/form-data" >
         {{bookForm.as_p}}
         {% csrf_token %}
@@ -107,13 +107,13 @@
 
 
 
-<div style="position:absolute;left:680px;top:500px;" >
+<div style="position:absolute;left:680px;top:550px;" >
     <input id="enablebook" type="checkbox" value="enabled">Enable Book
 </div>
 
 
 
-<div style="position:absolute;left:900px;top:300px;" >
+<div style="position:absolute;left:680px;top:500px;" >
     <label>Book Mode:</label>
     <select>
         <option value="best">Best</option>
@@ -125,7 +125,7 @@
 
 
 
-<div style="position:absolute;left:680px;top:550px;" >
+<div style="position:absolute;left:680px;top:600px;" >
     <input class="btn btn-default" id="hint" type="button" value="Hint">
 </div>
 
@@ -140,12 +140,12 @@
 
 
 
-<div style="position:absolute;left:300px;top:830px;" >
-    <input  class="btn btn-default" id="exit" type="button" value="Exit">
+<div style="position:absolute;left:550px;top:830px;" >
+    <input  style="background-color:#f0ad4e ; color:#FFF" class="btn btn-default" id="exit" type="button" value="Exit">
 </div>
 
-<div style="position:absolute;left:400px;top:830px;" >
-    <input class="btn btn-default"   id="kill" type="button" value="Give Up!">
+<div style="position:absolute;left:650px;top:830px;" >
+    <input style="background-color:#d9534f; color:#FFF" class="btn btn-default"   id="kill" type="button" value="Give Up!">
 </div>
 
 <div align="middle">
@@ -154,12 +154,16 @@
 </div>
 
 <script>
+
+
 $("select").addClass("btn btn-default dropdown-toggle");
+
+
 $("#id_book").change( function( ) {
 
-$("#historytable tr td").style.width
 
-
+    $("#pure_white").show();
+    $("#loader").show();
     $("#book")[0].submit();
 
  } )

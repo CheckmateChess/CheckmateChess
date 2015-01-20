@@ -8,7 +8,7 @@ import os.path
 from checkmateclient.forms import *
 
 HOST = '0.0.0.0'
-PORT = 20001
+PORT = 20000
 
 
 
@@ -76,7 +76,7 @@ def play(request):
         s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (cookie['color'], cookie['gameid']))
         response = loads(s.recv(4096))
         if not response['success']:
-            return HttpResponse("You shall not pass!")
+            return HttpResponse('<h1 style:"align:center" > Could not connect to game with id=%d</h1>' % cookie['gameid'] )
         gameid = cookie['gameid']
         color = cookie['color']
         board = editboard(response['board'])
@@ -92,7 +92,7 @@ def play(request):
         s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (data['color'], data['gameid']))
         response = loads(s.recv(4096))
         if not response['success']:
-            return HttpResponse("You shall not pass!")
+            return HttpResponse('<h1 style:"align:center" > Could not connect to game with id=%d</h1>' % cookie['gameid'] )
         gameid = data['gameid']
         color = data['color']
         board = editboard(response['board'])
