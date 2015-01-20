@@ -1,0 +1,190 @@
+<html>
+<body>
+
+
+    {% load staticfiles %}
+
+    <div name="boardimage" >
+    <img  src="{% static "board.gif" %}" width="160px" height="160px" style="position: absolute;left:20px;top:20px;" />
+    </div>
+
+    <table name="boardtable" border="0" style="position:absolute;left:20px;top:20px;" cellpadding="0" cellspacing="0" >
+    {% for row in board %}
+        <tr>
+        {% for cell in row %}
+            <td>
+
+                {% if cell.0 == "r"  %}
+                    <img class="cell" name="{{ cell.1 }}"  src="{% static "black_rook.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "n"  %}
+                    <img class="cell" name="{{ cell.1 }}" src="{% static "black_knight.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "b"  %}
+                    <img class="cell" name="{{ cell.1 }}" src="{% static "black_bishop.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "q"  %}
+                    <img class="cell" name="{{ cell.1 }}" src="{% static "black_queen.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "k"  %}
+                    <img class="cell" name="{{ cell.1 }}" src="{% static "black_king.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "p"  %}
+                    <img class="cell" name="{{ cell.1 }}" src="{% static "black_pawn.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "R"  %}
+                    <img class="cell" name="{{ cell.1 }}"  src="{% static "white_rook.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "N"  %}
+                    <img class="cell" name="{{ cell.1 }}" src="{% static "white_knight.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "B"  %}
+                    <img class="cell" name="{{ cell.1 }}" src="{% static "white_bishop.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "Q"  %}
+                    <img class="cell" name="{{ cell.1 }}" src="{% static "white_queen.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "K"  %}
+                    <img class="cell" name="{{ cell.1 }}" src="{% static "white_king.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% elif cell.0 == "P"  %}
+                    <img class="cell" name="{{ cell.1 }}" src="{% static "white_pawn.png" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% else %}
+                    <img class="cell" name="{{ cell.1 }}"  src="{% static "blank.gif" %}" width="20px" height="20px"
+                onClick="document.getElementsByName('moves')[0].value += this.name; control();" />
+                {% endif %}
+
+            </td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </table>
+
+    <table border="2" style="position:absolute;left:200px;top:20px;" cellpadding="0" cellspacing="0" >
+        <tr style="display:block;" >
+            <th>White</th>
+            <th>Black</th>
+        </tr>
+        <tbody style="height:100px;overflow:auto;display:block;" >
+        {% for row in history %}
+            <tr>
+                <td  >
+                    {{ row.0 }}
+                </td>
+                <td  >
+                    {{ row.1 }}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <form style="position: absolute;left:20px;top:200px;"  method="POST" action="/play/" >
+        {{ depthForm.as_p }}
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='setDepth'>
+    </form>
+
+
+    <form style="position: absolute;left:200px;top:200px;"  method="POST" action="/play/" >
+        {{ modeForm.as_p }}
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='changeMode'>
+    </form>
+
+    <form style="position: absolute;left:20px;top:300px;"  method="POST" action="/play/" >
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='newgame'>
+    </form>
+
+    <form style="position: absolute;left:200px;top:300px;"  method="POST" action="/play/" enctype="multipart/form-data" >
+        {{ addbookForm.as_p }}
+        {{hiddenForm.as_p}}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='addbook'>
+    </form>
+
+    <form style="position: absolute;left:20px;top:400px;"  method="POST" action="/play/" >
+        {{ enablebookForm.as_p }}
+        {{hiddenForm.as_p}}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='enablebook'>
+    </form>
+
+    <form style="position: absolute;left:200px;top:400px;"  method="POST" action="/play/" >
+        {{ bookmodeForm.as_p }}
+        {{hiddenForm.as_p}}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='setbookmode'>
+    </form>
+
+    <form name="playForm" method="POST" action="/play/" >
+        {{ playForm.as_p }}
+        {{hiddenForm.as_p}}
+        {% csrf_token %}
+        <input type='hidden' name='operation' value='Play'>
+    </form>
+
+    <form style="position: absolute;left:20px;top:500px;"  method="POST" action="/play/" >
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='undo'>
+    </form>
+
+    <form style="position: absolute;left:200px;top:500px;"  method="POST" action="/play/" >
+        {{ saveForm }}
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='save'>
+    </form>
+
+    <form style="position: absolute;left:20px;top:600px;"  method="POST" action="/play/" >
+        {{ loadForm }}
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='load'>
+    </form>
+
+    <form style="position: absolute;left:400px;top:600px;"  method="POST" action="/play/" >
+        {% if hintForm.hint.value != None %}
+            {{ hintForm.as_p }}
+        {% endif %}
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='hint'>
+    </form>
+
+    <form style="position: absolute;left:20px;top:700px;"  method="POST" action="/play/" >
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='exit'>
+    </form>
+
+    <form style="position: absolute;left:300px;top:700px;"  method="POST" action="/play/" >
+        {{ hiddenForm.as_p }}
+        {% csrf_token %}
+        <input type='submit' name='operation' value='giveup'>
+    </form>
+</body>
+
+<script>
+    function control()
+    {
+        if( document.getElementsByName("moves")[0].value.length == 4 )
+        {
+
+            document.getElementsByName('boardtable')[0].innerHTML = ' ';
+            document.getElementsByName('boardimage')[0].innerHTML = ' ';
+            document.getElementsByTagName('body')[0].innerHTML = '<div style="position:absolute;left:20px;top:20px;"  ><h1 style="color:red;" >Please wait</br>while your</br>opponent is</br>playing!</h1></div>'+document.getElementsByTagName('body')[0].innerHTML;
+            document.getElementsByName("playForm")[0].submit();
+        }
+    }
+</script>
+
+
+
+</html>
