@@ -1,7 +1,7 @@
 <h1>Checkmate - Web chess application based on GNUChess</h1>
 
 <h2>Description</h2>
-It is a web application designed and developed during the 2014-2015 Fall Semester as project of [Software Development with Scripting Languges](http://www.ceng.metu.edu.tr/course/ceng498/) course at Middle East Technical University. Pair Programming has been used as software development technique.
+It is a web application designed and developed during the 2014-2015 Fall Semester as project of [Software Development with Scripting Languages](http://www.ceng.metu.edu.tr/course/ceng498/) course at Middle East Technical University. Pair Programming has been used as software development technique.
 <strong>Important:</strong> Our project works best with GNU Chess 6.1.2
 
 <h2>Prerequisites</h2>
