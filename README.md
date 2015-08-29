@@ -31,8 +31,8 @@ We both love open source software and would like to see pull requests.
 This project is as a fork of [GNUChess](http://www.gnu.org/software/chess/).
 
 <h2>Screenshots</h2>
-![1](http://esrefozturk.com/checkmate/1.png)
-![2](http://esrefozturk.com/checkmate/2.png)
-![3](http://esrefozturk.com/checkmate/3.png)
+![1](/img/1.png)
+![2](/img/2.png)
+![3](/img/3.png)
 
 Built with hugs and bugs in Ankara.
