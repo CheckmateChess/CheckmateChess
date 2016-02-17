@@ -18,10 +18,8 @@
 
 
 from random import randint
-
 from Checkmate import Checkmate
 from Test import Test
-
 
 bookmodes = ['worst', 'best', 'random']
 

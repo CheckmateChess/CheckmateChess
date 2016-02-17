@@ -19,9 +19,7 @@
 
 from socket import *
 from json import *
-
 from Test import Test
-
 
 test = Test()
 

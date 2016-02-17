@@ -21,9 +21,7 @@ from threading import *
 from socket import *
 from json import *
 import sys
-
 from Checkmate import *
-
 
 """
     PROTOCOL
@@ -73,6 +71,7 @@ class Agent(Thread):
     '''
     Handles each clients requests by receiving and sending JSON objects.
     '''
+
     def __init__(self, conn, addr, checkmateserver):
         '''
         Take information needed to handle jobs.
@@ -119,7 +118,7 @@ class Agent(Thread):
             self.game.cv.release()
             if gamemode == 'multi':
                 self.color = data['color']
-            self.conn.send(dumps({'gameid': self.game.id,'board':board}))
+            self.conn.send(dumps({'gameid': self.game.id, 'board': board}))
 
         elif data['op'] == 'connect':
             self.checkmateserver.printlock.acquire()
@@ -140,7 +139,7 @@ class Agent(Thread):
                 game.cv.release()
                 if gamemode == 'multi':
                     self.color = data['color']
-                self.conn.send(dumps({'success': True,'board':board}))
+                self.conn.send(dumps({'success': True, 'board': board}))
                 self.game.cv.acquire()
                 self.game.cv.notifyAll()
                 self.game.cv.release()
@@ -154,7 +153,7 @@ class Agent(Thread):
                 return
         else:
             self.checkmateserver.printlock.acquire()
-            print self.name,data, "Wrong format"
+            print self.name, data, "Wrong format"
             self.checkmateserver.printlock.release()
             self.conn.send(dumps({'message': 'Wrong format'}))
             self.conn.shutdown(SHUT_RDWR)
@@ -261,7 +260,7 @@ class Agent(Thread):
                 function = data['params'][0]
                 params = data['params'][1:]
                 self.checkmateserver.printlock.acquire()
-                print self.name, "Playing" , function , "with" , params
+                print self.name, "Playing", function, "with", params
                 self.checkmateserver.printlock.release()
                 if function == 'nextmove':
                     self.game.cv.acquire()
@@ -275,9 +274,11 @@ class Agent(Thread):
                         self.game.cv.notifyAll()
                     self.game.cv.release()
                     if isfinished:
-                        self.conn.send(dumps({'board': board, 'success': success, 'history':history,'currentplayer':self.game.nextcolor , 'isfinished': isfinished}))
+                        self.conn.send(dumps({'board': board, 'success': success, 'history': history,
+                                              'currentplayer': self.game.nextcolor, 'isfinished': isfinished}))
                     else:
-                        self.conn.send(dumps({'board': board, 'success': success, 'history':history,'currentplayer':self.game.nextcolor }))
+                        self.conn.send(dumps({'board': board, 'success': success, 'history': history,
+                                              'currentplayer': self.game.nextcolor}))
 
                 elif function == 'save':
                     self.game.lock.acquire()
@@ -292,7 +293,7 @@ class Agent(Thread):
                     self.game.setdepth(3)
                     history = self.game.history()
                     self.game.lock.release()
-                    self.conn.send(dumps({'success': success , 'board':board, 'history':history}))
+                    self.conn.send(dumps({'success': success, 'board': board, 'history': history}))
 
                 elif function == 'hint':
                     self.game.lock.acquire()
@@ -393,7 +394,7 @@ class Agent(Thread):
                     history = self.game.history()
                     self.game.setdepth(3)
                     self.game.lock.release()
-                    self.conn.send(dumps({'board': board,'history':history}))
+                    self.conn.send(dumps({'board': board, 'history': history}))
 
                 elif function == 'changemode':
                     self.game.lock.acquire()
@@ -423,6 +424,7 @@ class CheckmateServer():
     '''
     CheckmateServer is a server for Checkmate application.
     '''
+
     def __init__(self, host, port):
         '''
         binds given host and port

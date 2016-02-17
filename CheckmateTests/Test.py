@@ -33,4 +33,3 @@ class Test:
                 print frame,
             print
         print "##############\n\n\n"
-

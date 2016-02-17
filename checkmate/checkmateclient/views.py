@@ -23,23 +23,17 @@ from django.http import HttpResponseRedirect
 from socket import *
 from json import *
 import os.path
-
 from checkmateclient.forms import *
 
 HOST = '0.0.0.0'
 PORT = 20000
 
 
-
-
-
-
-
-
 # Create your views here.
 
 def handlepost(request):
     pass
+
 
 def home(request):
     return render(request, 'index.html')
@@ -65,22 +59,22 @@ def upload_book(book, gameid=0):
         for chunk in book.chunks():
             f.write(chunk)
 
+
 def editboard(board):
     for i in range(8):
         for j in range(8):
             board[i][j] = [board[i][j], chr(j + ord('a')) + str(8 - i)]
     return board
 
-def play(request):
 
+def play(request):
     cookie = request.COOKIES
     data = request.POST
 
     s = socket(AF_INET, SOCK_STREAM)
     s.connect((HOST, PORT))
 
-
-    if  data.get('operation') == 'book':
+    if data.get('operation') == 'book':
         upload_book(request.FILES['book'])
         s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (cookie['color'], cookie['gameid']))
         response = loads(s.recv(4096))
@@ -88,21 +82,22 @@ def play(request):
         color = cookie['color']
         board = editboard(response['board'])
         s.send('{"op":"play" , "params":["addbook","%s/books/%s"]}' % (
-                    os.path.dirname(os.path.realpath(__file__)), request.FILES.get('book').name))
+            os.path.dirname(os.path.realpath(__file__)), request.FILES.get('book').name))
         s.recv(4096)
 
     elif cookie.get('gameid') and cookie.get('color'):
         s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (cookie['color'], cookie['gameid']))
         response = loads(s.recv(4096))
         if not response['success']:
-            return HttpResponse('<h1 style:"align:center" > Could not connect to game with id=%d</h1>' % cookie['gameid'] )
+            return HttpResponse(
+                '<h1 style:"align:center" > Could not connect to game with id=%d</h1>' % cookie['gameid'])
         gameid = cookie['gameid']
         color = cookie['color']
         board = editboard(response['board'])
     elif data.get('operation') == 'Start':
         s.send('{"op":"start" , "color":"%s","params":["%s","%s","%s"]}' % (
-                data['color'], data['mode'], data['difficulty'],
-                None ))
+            data['color'], data['mode'], data['difficulty'],
+            None))
         response = loads(s.recv(4096))
         gameid = response['gameid']
         color = data['color']
@@ -111,33 +106,32 @@ def play(request):
         s.send('{"op":"connect" , "color":"%s", "gameid":"%s"}' % (data['color'], data['gameid']))
         response = loads(s.recv(4096))
         if not response['success']:
-            return HttpResponse('<h1 style:"align:center" > Could not connect to game with id=%d</h1>' % cookie['gameid'] )
+            return HttpResponse(
+                '<h1 style:"align:center" > Could not connect to game with id=%d</h1>' % cookie['gameid'])
         gameid = data['gameid']
         color = data['color']
         board = editboard(response['board'])
-
 
     s.send('{"op":"exit"}')
     s.recv(4096)
     s.close()
 
-    context = { 'gameid':gameid,
-                'board':board,
-                'color':color,
-                'depth':3,
-                'enablebook':'disabled',
-                'bookmode':'random',
-                'bookForm':bookForm(),
-    }
-
+    context = {'gameid': gameid,
+               'board': board,
+               'color': color,
+               'depth': 3,
+               'enablebook': 'disabled',
+               'bookmode': 'random',
+               'bookForm': bookForm(),
+               }
 
     response = render(request, 'play.html', context)
     response.set_cookie("gameid", str(gameid))
-    response.set_cookie("color",str(color))
+    response.set_cookie("color", str(color))
     return response
 
-def handlepost(request):
 
+def handlepost(request):
     data = request.GET
     if not data:
         return HttpResponse("Noooooo")
@@ -147,9 +141,11 @@ def handlepost(request):
     s.recv(4096)
     query = loads(data['query']);
     if query.get('params') and 'save' in query.get('params'):
-        query.get('params')[1] = os.path.dirname(os.path.realpath(__file__)) + '/saved/' + query.get('params')[1] + '.pgn';
+        query.get('params')[1] = os.path.dirname(os.path.realpath(__file__)) + '/saved/' + query.get('params')[
+            1] + '.pgn';
     if query.get('params') and 'load' in query.get('params'):
-        query.get('params')[1] = os.path.dirname(os.path.realpath(__file__)) + '/saved/' + query.get('params')[1] + '.pgn';
+        query.get('params')[1] = os.path.dirname(os.path.realpath(__file__)) + '/saved/' + query.get('params')[
+            1] + '.pgn';
     s.send(dumps(query))
     response = s.recv(4096)
     s.send('{"op":"exit"}')
@@ -175,7 +171,7 @@ def play2(request):
 
             s.send('{"op":"start" , "color":"%s","params":["%s","%s","%s"]}' % (
                 data.get('color'), data.get('mode'), data.get('difficulty'),
-                bookname ))
+                bookname))
             gameid = loads(s.recv(4096)).get('gameid')
             color = data.get('color')
             mode = data.get('mode')
@@ -184,7 +180,7 @@ def play2(request):
             context = {'hiddenForm': hiddenForm(initial={'gameid': gameid, 'color': color, 'bookenabled': enablebook}),
                        'gameid': gameid
 
-            }
+                       }
 
             return render(request, 'showgameid.html', context)
 
@@ -198,7 +194,7 @@ def play2(request):
 
             if data['operation'] == 'Play':
                 moves = data.get('moves')
-                s.send('{"op":"play" , "params":["nextmove","%s","%s"]}' % ( color, moves[:2] + ' ' + moves[2:] ))
+                s.send('{"op":"play" , "params":["nextmove","%s","%s"]}' % (color, moves[:2] + ' ' + moves[2:]))
                 feedback = loads(s.recv(4096))
                 if feedback.get('message') == 'Game is killed':
                     s.close()
@@ -317,7 +313,7 @@ def play2(request):
                'saveForm': saveForm(),
                'loadForm': loadForm(),
                'hintForm': hintFormx,
-    }
+               }
 
     return render(request, 'play.html', context)
 

@@ -19,9 +19,7 @@
 
 from socket import *
 from json import *
-
 from Test import Test
-
 
 moves = [('White', 'e2 e4'), ('Black', 'a7 a6'), ('White', 'd1 f3'), ('Black', 'a6 a5'), ('White', 'f1 c4'),
          ('Black', 'a5 a4'), ('White', 'f3 f7')]

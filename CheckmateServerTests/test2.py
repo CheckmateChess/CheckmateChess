@@ -20,7 +20,6 @@
 from random import randint
 from socket import *
 from json import *
-
 from Test import Test
 
 bookmodes = ['worst', 'best', 'random']

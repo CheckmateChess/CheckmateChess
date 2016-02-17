@@ -18,9 +18,7 @@
 
 
 from socket import *
-
 from Test import Test
-
 
 moves = [('Black', 'a7 a6'), ('Black', 'a6 a5'), ('Black', 'a5 a4')]
 

@@ -184,9 +184,9 @@ class Checkmate:
         @return: list of lists, each row is a list, list of rows
         """
         # self.process.stdin.write('show board\n')
-        #self.readgarbage(4)
-        #self.readboard()
-        #self.readgarbage(1)
+        # self.readgarbage(4)
+        # self.readboard()
+        # self.readgarbage(1)
         return self.board
 
     def history(self):
